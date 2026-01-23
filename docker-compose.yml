@@ -1,0 +1,32 @@
+services:
+  # 1. ส่วนของหน้าเว็บ PHP
+  brirscer-web:
+    build: ./docker/php
+    container_name: brirscer-web-con
+    ports:
+      - "84:80" # เข้าหน้าเว็บทาง localhost:84
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      - brirscer-db
+
+  # 2. ส่วนของฐานข้อมูล MySQL
+  brirscer-db:
+    image: mysql:8.0
+    container_name: brirscer-db-con
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: brirscer_db
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  # 3. ส่วนของหน้าจัดการฐานข้อมูล phpMyAdmin
+  brirscer-pma:
+    image: phpmyadmin
+    container_name: brirscer-pma-con
+    ports:
+      - "8084:80" # เข้า phpMyAdmin ทาง localhost:8084
+    environment:
+      PMA_HOST: brirscer-db
+    depends_on:
+      - brirscer-db
