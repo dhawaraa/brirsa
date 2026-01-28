@@ -66,28 +66,36 @@ include 'includes/navbar.php';
                 $statusInfo = $STATUS_OPTIONS[$result['status']] ?? $STATUS_OPTIONS['checking'];
                 ?>
                 <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-<?php echo $statusInfo['color']; ?>-500">
-                    <!-- Header -->
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h4 class="font-bold text-lg text-gray-800">
-                                <?php echo htmlspecialchars($result['project_title']); ?>
-                            </h4>
-                            <p class="text-sm text-gray-600 mt-1">
-                                รหัส: <span class="font-mono bg-gray-100 px-2 py-0.5 rounded">
+                    <!-- Status Header (Prominent) -->
+                    <div class="mb-6 border-b pb-4 dark:border-gray-700">
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <span
+                                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold border shadow-sm bg-<?php echo $statusInfo['color']; ?>-100 text-<?php echo $statusInfo['color']; ?>-800 border-<?php echo $statusInfo['color']; ?>-300">
+                                <i data-lucide="<?php echo $statusInfo['icon'] ?? 'info'; ?>" class="w-5 h-5 mr-2"></i>
+                                <?php echo $statusInfo['label']; ?>
+                            </span>
+                            <span class="text-xs text-gray-500">
+                                <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
+                                ส่งเมื่อ: <?php echo formatThaiDate($result['created_at']); ?>
+                            </span>
+                        </div>
+
+                        <h4 class="font-bold text-xl md:text-2xl text-gray-900 leading-tight mb-3">
+                            <?php echo htmlspecialchars($result['project_title']); ?>
+                        </h4>
+
+                        <div class="flex flex-wrap items-center gap-y-2 text-sm text-gray-600">
+                            <div class="flex items-center mr-4">
+                                <span class="font-semibold text-gray-500 mr-2">รหัสคำขอ:</span>
+                                <span class="font-mono bg-gray-100 px-2 py-0.5 rounded text-mcu-blue font-bold">
                                     <?php echo $result['request_id']; ?>
                                 </span>
-                                | ผู้วิจัย:
-                                <?php echo htmlspecialchars($result['name']); ?>
-                            </p>
-                            <p class="text-gray-500 text-xs mt-1">
-                                ส่งเมื่อ:
-                                <?php echo formatThaiDate($result['created_at']); ?>
-                            </p>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="font-semibold text-gray-500 mr-2">ผู้วิจัย:</span>
+                                <span class="text-gray-800"><?php echo htmlspecialchars($result['name']); ?></span>
+                            </div>
                         </div>
-                        <span
-                            class="px-3 py-1 rounded-full text-xs font-semibold border bg-<?php echo $statusInfo['color']; ?>-100 text-<?php echo $statusInfo['color']; ?>-800 border-<?php echo $statusInfo['color']; ?>-200">
-                            <?php echo $statusInfo['label']; ?>
-                        </span>
                     </div>
 
                     <!-- Details -->
@@ -125,7 +133,7 @@ include 'includes/navbar.php';
                                 <i data-lucide="award" class="w-5 h-5 mr-2"></i>
                                 ได้รับการรับรองแล้ว
                             </span>
-                            <a href="<?php echo htmlspecialchars($result['file_rs_cert']); ?>" target="_blank"
+                            <a href="<?php echo htmlspecialchars(ensureSecureUrl($result['file_rs_cert'])); ?>" target="_blank"
                                 class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 flex items-center shadow">
                                 <i data-lucide="download" class="w-4 h-4 mr-2"></i>
                                 ดาวน์โหลดใบรับรอง
@@ -133,12 +141,13 @@ include 'includes/navbar.php';
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($result['status'] === 'correction'): ?>
+                    <?php if (in_array($result['status'], ['correction', 'ch_edit'])): ?>
                         <!-- Correction Required -->
                         <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                             <div class="flex items-center gap-2 mb-3 text-orange-800 font-bold">
-                                <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                สิ่งที่ต้องแก้ไข
+                                <i data-lucide="<?php echo ($result['status'] === 'ch_edit') ? 'edit' : 'edit-3'; ?>"
+                                    class="w-5 h-5"></i>
+                                <?php echo ($result['status'] === 'ch_edit') ? 'บันทึกแจ้งแก้ไขข้อมูลเอกสาร' : 'สิ่งที่ต้องแก้ไข (รายงานวิจัย)'; ?>
                             </div>
 
                             <?php if ($result['correction_note']): ?>
@@ -155,7 +164,8 @@ include 'includes/navbar.php';
                                         <i data-lucide="upload" class="w-4 h-4 mr-2"></i>
                                         ส่งข้อมูล/ไฟล์ที่แจ้งแก้ไข
                                     </a>
-                                    <a href="<?php echo htmlspecialchars($result['file_correction']); ?>" target="_blank"
+                                    <a href="<?php echo htmlspecialchars(ensureSecureUrl($result['file_correction'])); ?>"
+                                        target="_blank"
                                         class="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 shadow-sm transition-colors">
                                         <i data-lucide="download" class="w-4 h-4 mr-2"></i>
                                         ดาวน์โหลดเอกสารแจ้งแก้ไข

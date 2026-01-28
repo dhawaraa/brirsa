@@ -22,9 +22,13 @@ try {
         die('ไม่พบข้อมูลคำขอ หรืออีเมลไม่ถูกต้อง');
     }
 
-    if ($request['status'] !== 'correction' && $request['status'] !== 'checking') {
-        die('สถานะปัจจุบันไม่สามารถแก้ไขข้อมูลได้ (สถานะต้องเป็น "ส่งกลับแก้ไข" หรือ "กำลังตรวจสอบ")');
+    $allowed_statuses = ['correction', 'ch_edit'];
+    if (!in_array($request['status'], $allowed_statuses)) {
+        die('สถานะปัจจุบันไม่สามารถแก้ไขข้อมูลได้ (หรืออยู่นอกระยะเวลาที่กำหนด)');
     }
+
+    // Status 3 (correction) is Report Only. Status 1.5 (ch_edit) is Full Edit.
+    $isReportOnly = ($request['status'] === 'correction');
 
 } catch (Exception $e) {
     die('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
@@ -105,72 +109,76 @@ include 'includes/navbar.php';
                 <input type="hidden" name="request_id" value="<?php echo $requestId; ?>">
 
                 <!-- Personal Info -->
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="md:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="name" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['name']); ?>">
+                <?php if (!$isReportOnly): ?>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="name" required class="input-field"
+                                value="<?php echo htmlspecialchars($request['name']); ?>">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อโครงการวิจัย <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="project_title" required class="input-field"
+                                value="<?php echo htmlspecialchars($request['project_title']); ?>">
+                        </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อโครงการวิจัย <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="project_title" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['project_title']); ?>">
-                    </div>
-                </div>
 
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="fiscal_year" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['fiscal_year']); ?>">
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="fiscal_year" required class="input-field"
+                                value="<?php echo htmlspecialchars($request['fiscal_year']); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">สังกัด <span
+                                    class="text-red-500">*</span></label>
+                            <select name="affiliation" required class="input-field">
+                                <?php foreach ($AFFILIATIONS as $aff): ?>
+                                    <option value="<?php echo htmlspecialchars($aff); ?>" <?php echo $request['affiliation'] === $aff ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($aff); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ตำแหน่งทางวิชาการที่ขอ</label>
+                            <select name="academic_position" class="input-field">
+                                <option value="">-- เลือก --</option>
+                                <option <?php echo $request['academic_position'] === 'ผู้ช่วยศาสตราจารย์' ? 'selected' : ''; ?>>ผู้ช่วยศาสตราจารย์</option>
+                                <option <?php echo $request['academic_position'] === 'รองศาสตราจารย์' ? 'selected' : ''; ?>>
+                                    รองศาสตราจารย์</option>
+                                <option <?php echo $request['academic_position'] === 'ศาสตราจารย์' ? 'selected' : ''; ?>>
+                                    ศาสตราจารย์</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">สังกัด <span
-                                class="text-red-500">*</span></label>
-                        <select name="affiliation" required class="input-field">
-                            <?php foreach ($AFFILIATIONS as $aff): ?>
-                                <option value="<?php echo htmlspecialchars($aff); ?>" <?php echo $request['affiliation'] === $aff ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($aff); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ตำแหน่งทางวิชาการที่ขอ</label>
-                        <select name="academic_position" class="input-field">
-                            <option value="">-- เลือก --</option>
-                            <option <?php echo $request['academic_position'] === 'ผู้ช่วยศาสตราจารย์' ? 'selected' : ''; ?>>ผู้ช่วยศาสตราจารย์</option>
-                            <option <?php echo $request['academic_position'] === 'รองศาสตราจารย์' ? 'selected' : ''; ?>
-                                >รองศาสตราจารย์</option>
-                            <option <?php echo $request['academic_position'] === 'ศาสตราจารย์' ? 'selected' : ''; ?>
-                                >ศาสตราจารย์</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">สาขาที่ขอ</label>
-                        <input type="text" name="branch" class="input-field"
-                            value="<?php echo htmlspecialchars($request['branch']); ?>">
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">สาขาที่ขอ</label>
+                            <input type="text" name="branch" class="input-field"
+                                value="<?php echo htmlspecialchars($request['branch']); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์ <span
+                                    class="text-red-500">*</span></label>
+                            <input type="tel" name="tel" required class="input-field"
+                                value="<?php echo htmlspecialchars($request['tel']); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล <span
+                                    class="text-red-500">*</span></label>
+                            <input type="email" name="email" required class="input-field bg-gray-50"
+                                value="<?php echo htmlspecialchars($request['email']); ?>" readonly>
+                            <p class="text-xs text-gray-400 mt-1">* ไม่สามารถแก้ไขอีเมลได้</p>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์ <span
-                                class="text-red-500">*</span></label>
-                        <input type="tel" name="tel" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['tel']); ?>">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล <span
-                                class="text-red-500">*</span></label>
-                        <input type="email" name="email" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['email']); ?>" readonly bg-gray-50>
-                        <p class="text-xs text-gray-400 mt-1">* ไม่สามารถแก้ไขอีเมลได้</p>
-                    </div>
-                </div>
+                <?php else: ?>
+                    <input type="hidden" name="email" value="<?php echo htmlspecialchars($request['email']); ?>">
+                <?php endif; ?>
 
                 <!-- File Uploads -->
                 <div class="border-t pt-6">
@@ -181,7 +189,9 @@ include 'includes/navbar.php';
                     <p class="text-xs text-gray-500 mb-4">* หากไม่ต้องการเปลี่ยนไฟล์เดิม ให้ปล่อยว่างไว้</p>
                     <div class="grid md:grid-cols-2 gap-x-8 gap-y-4">
                         <?php
-                        $fileFields = [
+                        $fileFields = $isReportOnly ? [
+                            ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์']
+                        ] : [
                             ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์'],
                             ['name' => 'file_self_assess', 'label' => '2. แบบประเมินตนเอง'],
                             ['name' => 'file_sp10', 'label' => '3. บันทึกข้อความ สวพ.10'],
@@ -229,20 +239,22 @@ include 'includes/navbar.php';
                 </div>
 
                 <!-- Journal Info -->
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อวารสารที่ตีพิมพ์ <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="journal_name" required class="input-field"
-                            value="<?php echo htmlspecialchars($request['journal_name']); ?>">
+                <?php if (!$isReportOnly): ?>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อวารสารที่ตีพิมพ์ <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="journal_name" required class="input-field"
+                                value="<?php echo htmlspecialchars($request['journal_name']); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">จำนวน % การคัดลอก (ไม่เกิน 15%)
+                                <span class="text-red-500">*</span></label>
+                            <input type="number" name="plagiarism_percent" required max="15" step="0.01" class="input-field"
+                                value="<?php echo htmlspecialchars($request['plagiarism_percent']); ?>">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวน % การคัดลอก (ไม่เกิน 15%)
-                            <span class="text-red-500">*</span></label>
-                        <input type="number" name="plagiarism_percent" required max="15" step="0.01" class="input-field"
-                            value="<?php echo htmlspecialchars($request['plagiarism_percent']); ?>">
-                    </div>
-                </div>
+                <?php endif; ?>
 
                 <!-- Agreement & Captcha -->
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">

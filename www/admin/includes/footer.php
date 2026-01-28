@@ -13,6 +13,8 @@
 </footer>
 </div>
 
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
 <!-- Flowbite JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 <script>
@@ -54,6 +56,11 @@
             }
         }
     });
+
+    // Initialize Lucide Icons
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 </script>
 </body>
 

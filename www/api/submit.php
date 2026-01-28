@@ -131,9 +131,25 @@ try {
         $uploadedFiles['file_participation'] ?? null
     ]);
 
+    $lastId = $pdo->lastInsertId();
+
+    // Send Google Chat notification
+    require_once '../includes/notifier.php';
+    sendGoogleChat('new', [
+        'id' => $lastId,
+        'request_id' => $request_id,
+        'name' => $name,
+        'project_title' => $project_title,
+        'affiliation' => $affiliation,
+        'academic_position' => $academic_position,
+        'branch' => $branch,
+        'email' => $email,
+        'created_at' => date('Y-m-d H:i:s')
+    ]);
+
     // Send notification email to researcher
     require_once '../includes/mail_config.php';
-    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . "://{$_SERVER['HTTP_HOST']}";
+    $baseUrl = "https://newbri.mcu.ac.th/app/rsa";
     $subject = "ยืนยันการรับข้อมูลขอรับรองงานวิจัย - รหัสคำขอ $request_id";
 
     // File Link helper
@@ -220,9 +236,18 @@ try {
                     $fileLinks
                 </table>
 
-                <div style='margin-top: 30px; text-align: center;'>
+                <div style='background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 15px; margin-top: 25px;'>
+                    <h4 style='color: #e67700; margin: 0 0 10px 0; font-size: 15px;'>⚠️ สิ่งที่ต้องปฏิบัติภายหลังส่งข้อมูล</h4>
+                    <ul style='margin: 0 0 10px 0; padding-left: 20px; color: #8a5e00; font-size: 13px;'>
+                        <li style='margin-bottom: 5px;'>ส่งเล่มเอกสารรายงานวิจัยฉบับสมบูรณ์ ฉบับจริง จำนวน 1 เล่ม</li>
+                        <li>พร้อมบันทึกข้อความ สวพ.10 จำนวน 1 ฉบับ</li>
+                    </ul>
+                    <p style='margin: 0; color: #8a5e00; font-size: 13px; font-weight: bold;'>มายัง สถาบันวิจัยพุทธศาสตร์ มจร อ.วังน้อย จ.พระนครศรีอยุธยา</p>
+                </div>
+
+                <div style='margin-top: 30px; text-align: left;'>
                     <a href='$baseUrl/status.php?id=$request_id' 
-                       style='background-color: #003366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+                       style='background-color: #003366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;'>
                        🔍 ติดตามสถานะได้ที่นี่
                     </a>
                 </div>

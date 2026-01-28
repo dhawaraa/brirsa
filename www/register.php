@@ -21,9 +21,18 @@ include 'includes/navbar.php';
                     </div>
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">ดำเนินการสำเร็จ!</h3>
                     <p class="text-gray-600 mb-4">ระบบได้บันทึกข้อมูลเรียบร้อยแล้ว</p>
-                    <p class="text-sm text-gray-500 mb-6">รหัสคำขอของคุณ: <strong id="requestIdDisplay"
+                    <p class="text-sm text-gray-500 mb-4">รหัสคำขอของคุณ: <strong id="requestIdDisplay"
                             class="text-mcu-blue"></strong></p>
-                    <a href="status.php"
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 text-left">
+                        <h4 class="text-blue-800 font-bold text-sm mb-2">สิ่งที่ต้องปฏิบัติภายหลังส่งข้อมูล:</h4>
+                        <ul class="text-blue-700 text-xs space-y-1 list-decimal list-inside mb-2">
+                            <li>ส่งเล่มเอกสารรายงานวิจัยฉบับสมบูรณ์ ฉบับจริง จำนวน 1 เล่ม</li>
+                            <li>พร้อมบันทึกข้อความ สวพ.10 จำนวน 1 ฉบับ</li>
+                        </ul>
+                        <p class="text-blue-700 text-xs font-semibold">มายัง สถาบันวิจัยพุทธศาสตร์ มจร อ.วังน้อย
+                            จ.พระนครศรีอยุธยา</p>
+                    </div>
+                    <a id="successStatusLink" href="status.php"
                         class="block w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 text-center">
                         ตรวจสอบสถานะ
                     </a>
@@ -189,11 +198,26 @@ include 'includes/navbar.php';
 
                 <!-- Agreement & Captcha -->
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <!-- Instruction Box -->
+                    <div class="bg-red-50 border-2 border-red-500 p-4 rounded-lg mb-6">
+                        <h4 class="text-red-700 font-bold mb-2 flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 mr-2"></i>
+                            สิ่งที่ต้องปฏิบัติภายหลังส่งข้อมูล
+                        </h4>
+                        <ul class="text-red-600 text-sm space-y-1 list-decimal list-inside mb-2">
+                            <li>ส่งเล่มเอกสารรายงานวิจัยฉบับสมบูรณ์ ฉบับจริง จำนวน 1 เล่ม</li>
+                            <li>พร้อมบันทึกข้อความ สวพ.10 จำนวน 1 ฉบับ</li>
+                        </ul>
+                        <p class="text-red-600 text-sm font-semibold">มายัง สถาบันวิจัยพุทธศาสตร์ มจร อ.วังน้อย
+                            จ.พระนครศรีอยุธยา</p>
+                    </div>
+
                     <div class="flex items-start gap-3 mb-4">
                         <input type="checkbox" name="agreement" id="agreement" required
-                            class="mt-1 w-4 h-4 text-pink-600 rounded">
-                        <label for="agreement" class="text-sm text-gray-700">
-                            ข้าพเจ้าตรวจสอบเอกสารครบถ้วนแล้ว และยืนยันว่าข้อมูลทั้งหมดเป็นความจริง
+                            class="mt-1 w-4 h-4 text-mcu-pink rounded">
+                        <label for="agreement" class="text-sm text-gray-700 cursor-pointer">
+                            ข้าพเจ้าได้ดำเนินการตรวจสอบเอกสารข้างต้นเรียบร้อยแล้ว
+                            จึงขอนำส่งข้อมูลเพื่อให้สถาบันวิจัยพุทธศาสตร์รับรองผลงานวิจัยต่อไป
                         </label>
                     </div>
                     <div class="flex items-center gap-3">
@@ -303,6 +327,7 @@ include 'includes/navbar.php';
                 setTimeout(() => {
                     loadingModal.classList.add('hidden');
                     document.getElementById('requestIdDisplay').textContent = result.request_id;
+                    document.getElementById('successStatusLink').href = 'status.php?id=' + result.request_id;
                     document.getElementById('successModal').classList.remove('hidden');
                 }, 500);
             } else {

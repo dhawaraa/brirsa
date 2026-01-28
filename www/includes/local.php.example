@@ -1,0 +1,11 @@
+<?php
+/**
+ * Local Configuration Override
+ * Copy this file to local.php and fill in your production database details.
+ * This file should NOT be committed to version control.
+ */
+
+define('DB_HOST', 'your_production_db_host');
+define('DB_NAME', 'your_production_db_name');
+define('DB_USER', 'your_production_db_user');
+define('DB_PASS', 'your_production_db_password');

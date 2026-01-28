@@ -1,5 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
+<?php
+// Force Line in-app browser to open external browser
+if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'Line') !== false && strpos($_SERVER['QUERY_STRING'], 'openExternalBrowser=1') === false) {
+    if (!headers_sent()) {
+        $sep = strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?';
+        header("Location: " . $_SERVER['REQUEST_URI'] . $sep . "openExternalBrowser=1");
+        exit;
+    }
+}
+?>
 
 <head>
     <meta charset="UTF-8">

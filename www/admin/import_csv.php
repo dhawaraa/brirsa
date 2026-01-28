@@ -40,7 +40,7 @@ if ($step === 'preview' && isset($_FILES['csv_file'])) {
     } else {
         // Set locale to handle Thai characters and UTF-8 CSV
         setlocale(LC_ALL, 'th_TH.UTF-8');
-        
+
         // Parse CSV
         $handle = fopen($file['tmp_name'], 'r');
         if ($handle) {
@@ -87,12 +87,13 @@ if ($step === 'preview' && isset($_FILES['csv_file'])) {
                     'plagiarism_percent' => trim($data['จำนวน % ของการคัดลอก (ไม่เกิน 15%)'] ?? ''),
                     'status_text' => trim($data['สถานะดำเนินการ'] ?? ''),
                     'created_at' => trim($data['วันที่ส่งข้อมูล'] ?? ''),
-                    'file_report' => trim($data['แนบไฟล์รายงานวิจัยฉบับสมบูรณณ์ (PDF)'] ?? ''),
+                    'file_report' => trim($data['แนบไฟล์รายงานวิจัยฉบับสมบูรณ์ (PDF)'] ?? $data['แนบไฟล์รายงานวิจัยฉบับสมบูรณณ์ (PDF)'] ?? ''),
                     'file_self_assess' => trim($data['แนบไฟล์แบบประเมินตนเองสำหรับการยื่นขอรับรองงานวิจัย'] ?? ''),
                     'file_sp10' => trim($data['แนบไฟล์บันทึกข้อความขอรับรองงานวิจัย สพ.10'] ?? ''),
                     'file_sp10_1' => trim($data['แนบไฟล์แบบฟอร์มตรวจเอกสาร สพ.10.1'] ?? ''),
                     'file_cert' => trim($data['แนบไฟล์เอกสารรับรองการตีพิมพ์ผลงาน'] ?? ''),
                     'file_plagiarism' => trim($data['แนบหลักฐานตรวจสอบการคัดลอกผลงานวิจัย (อักขราวิสุทธิ์)'] ?? ''),
+                    'file_participation' => trim($data['แนบไฟล์หลักฐานการมีส่วนร่วมในงานวิจัย'] ?? $data['7. หลักฐานการมีส่วนร่วมในงานวิจัย'] ?? ''),
                     'file_rs_cert' => trim($data['ดาวน์โหลดใบรับรอง'] ?? ''),
                     'valid' => true,
                     'error_msg' => ''
@@ -157,8 +158,8 @@ if ($step === 'import' && isset($_SESSION['csv_preview'])) {
                     academic_position, branch, tel, email, journal_name,
                     plagiarism_percent, status, created_at,
                     file_report, file_self_assess, file_sp10, file_sp10_1,
-                    file_cert, file_plagiarism, file_rs_cert
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    file_cert, file_plagiarism, file_participation, file_rs_cert
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             // Handle NOT NULL constraints for blank CSV data
@@ -168,7 +169,7 @@ if ($step === 'import' && isset($_SESSION['csv_preview'])) {
             $affil = $record['affiliation'] ?: 'ไม่ระบุ';
             $tel = $record['tel'] ?: '-';
             $email = $record['email'] ?: 'no-email@example.com';
-            
+
             // Format date for MySQL
             $createdAt = $record['created_at'];
             if ($createdAt) {
@@ -202,6 +203,7 @@ if ($step === 'import' && isset($_SESSION['csv_preview'])) {
                 $record['file_sp10_1'] ?: null,
                 $record['file_cert'] ?: null,
                 $record['file_plagiarism'] ?: null,
+                $record['file_participation'] ?: null,
                 $record['file_rs_cert'] ?: null
             ]);
 
@@ -265,12 +267,28 @@ if ($step === 'preview' && isset($_SESSION['csv_preview'])) {
         <h4 class="text-lg font-bold mb-4 dark:text-white">อัปโหลดไฟล์ CSV</h4>
 
         <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h5 class="font-bold text-blue-800 dark:text-blue-300 mb-2">📋 คำแนะนำ:</h5>
-            <ul class="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
-                <li>Export ข้อมูลจาก Google Sheets เป็นไฟล์ .csv</li>
-                <li>ต้องมี header row ตรงกับรูปแบบที่กำหนด</li>
-                <li>ระบบจะ Skip รายการที่มี form_id ซ้ำโดยอัตโนมัติ</li>
-                <li>ลิงก์ไฟล์จากระบบเก่าจะถูกเก็บไว้ในฐานข้อมูล</li>
+            <h5 class="font-bold text-blue-800 dark:text-blue-300 mb-2">📋 คำแนะนำการเตรียมไฟล์:</h5>
+            <ul class="text-sm text-blue-700 dark:text-blue-400 space-y-2 list-disc list-inside">
+                <li>Export ข้อมูลจาก Google Sheets เป็นไฟล์ <strong>.csv (Comma Separated Values)</strong></li>
+                <li><strong>แถวแรก (Header)</strong> ต้องมีชื่อคอลัมน์ตรงตามนี้ทุกประการ (เรียงลำดับอย่างไรก็ได้):
+                    <div
+                        class="mt-2 p-3 bg-gray-900 text-gray-300 rounded overflow-x-auto font-mono text-[10px] leading-relaxed">
+                        form_id, วันที่ส่งข้อมูล, ชื่อ-นามสกุล, ปีงบประมาณ, ชื่อโครงการวิจัย, สังกัด,
+                        ตำแหน่งทางวิชาการที่ขอ, สาขาที่ขอ, เบอร์โทรศัพท์, อีเมล, ชื่อวารสารที่ตีพิมพ์, จำนวน % ของการคัดลอก
+                        (ไม่เกิน 15%), สถานะดำเนินการ, แนบไฟล์รายงานวิจัยฉบับสมบูรณ์ (PDF),
+                        แนบไฟล์แบบประเมินตนเองสำหรับการยื่นขอรับรองงานวิจัย, แนบไฟล์บันทึกข้อความขอรับรองงานวิจัย สพ.10,
+                        แนบไฟล์แบบฟอร์มตรวจเอกสาร สพ.10.1, แนบไฟล์เอกสารรับรองการตีพิมพ์ผลงาน,
+                        แนบหลักฐานตรวจสอบการคัดลอกผลงานวิจัย (อักขราวิสุทธิ์), แนบไฟล์หลักฐานการมีส่วนร่วมในงานวิจัย,
+                        ดาวน์โหลดใบรับรอง
+                    </div>
+                </li>
+                <li>ระบบจะ Skip รายการที่มี <strong>ชื่อ + ชื่อโครงการ</strong> ซ้ำกับในฐานข้อมูลโดยอัตโนมัติ</li>
+                <li>ฟิลด์ <strong>สถานะดำเนินการ</strong> ต้องเป็นค่าใดค่าหนึ่งดังนี้:
+                    <span class="font-bold underline">เจ้าหน้าที่ตรวจสอบเอกสาร</span>,
+                    <span class="font-bold underline">เสนอคณะกรรมการพิจารณา</span>,
+                    <span class="font-bold underline">นักวิจัยดำเนินการแก้ไข</span> หรือ
+                    <span class="font-bold underline">อนุมัติออกใบรับรอง</span>
+                </li>
             </ul>
         </div>
 

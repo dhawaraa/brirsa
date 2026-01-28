@@ -22,6 +22,14 @@ if (!$request) {
 $message = '';
 $messageType = '';
 
+if (isset($_GET['updated'])) {
+    $message = 'อัปเดตข้อมูลเรียบร้อยแล้ว';
+    if (isset($_GET['preset_status']) && $_GET['preset_status'] === 'approved') {
+        $message = 'อัปโหลดใบรับรองสำเร็จ! กรุณากดปุ่ม "บันทึกสถานะ" เพื่อเสร็จสิ้นขั้นตอนการอนุมัติ';
+    }
+    $messageType = 'success';
+}
+
 // Handle POST actions
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -32,8 +40,32 @@ try {
                 $newStatus = sanitize($_POST['status'] ?? '');
                 $correctionNote = sanitize($_POST['correction_note'] ?? '');
 
-                if ($newStatus === 'correction' && empty($correctionNote)) {
-                    throw new Exception('กรุณาระบุบันทึกแจ้งแก้ไขก่อนเปลี่ยนสถานะ');
+                if (in_array($newStatus, ['correction', 'ch_edit', 'rejected']) && empty($correctionNote)) {
+                    $label = match ($newStatus) {
+                        'ch_edit' => 'บันทึกแจ้งแก้ไขข้อมูล',
+                        'correction' => 'บันทึกแจ้งแก้ไขรายงานวิจัย',
+                        'rejected' => 'เหตุผล',
+                        default => 'บันทึกแจ้งแก้ไข'
+                    };
+                    throw new Exception("กรุณาระบุ $label ก่อนเปลี่ยนสถานะ");
+                }
+
+                if ($newStatus === 'approved' && empty($request['file_rs_cert'])) {
+                    throw new Exception("ไม่สามารถอนุมัติได้: กรุณาอัปโหลดใบรับรองงานวิจัยก่อน");
+                }
+
+                if (isset($_FILES['correction_file']) && $_FILES['correction_file']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = UPLOAD_DIR . $request['request_id'] . '/';
+                    if (!file_exists($uploadDir))
+                        mkdir($uploadDir, 0755, true);
+                    $ext = pathinfo($_FILES['correction_file']['name'], PATHINFO_EXTENSION);
+                    $filename = 'correction_' . time() . '.' . $ext;
+                    $targetPath = $uploadDir . $filename;
+                    if (move_uploaded_file($_FILES['correction_file']['tmp_name'], $targetPath)) {
+                        $dbPath = 'uploads/' . $request['request_id'] . '/' . $filename;
+                        $stmt = $pdo->prepare("UPDATE requests SET file_correction = ? WHERE id = ?");
+                        $stmt->execute([$dbPath, $id]);
+                    }
                 }
 
                 $stmt = $pdo->prepare("UPDATE requests SET status = ?, correction_note = ? WHERE id = ?");
@@ -62,31 +94,40 @@ try {
                                 $statusLabel
                             </div>";
 
-                if ($newStatus === 'correction' && !empty($correctionNote)) {
+                if (in_array($newStatus, ['correction', 'ch_edit', 'rejected']) && !empty($correctionNote)) {
+                    $noteLabel = match ($newStatus) {
+                        'ch_edit' => 'บันทึกแจ้งแก้ไขข้อมูล:',
+                        'correction' => 'บันทึกแจ้งแก้ไขรายงานวิจัย:',
+                        'rejected' => 'เหตุผลการไม่รับรอง:',
+                        default => 'บันทึกเพิ่มเติมจากเจ้าหน้าที่:'
+                    };
                     $body .= "
-                            <div style='margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px;'>
-                                <strong style='color: #856404;'>บันทึกเพิ่มเติมจากเจ้าหน้าที่:</strong><br>
-                                " . nl2br($correctionNote) . "
+                            <div style='margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;'>
+                                <strong style='color: #856404; display: block; margin-bottom: 5px;'>$noteLabel</strong>
+                                <div style='color: #666; font-size: 14px; white-space: pre-wrap;'>" . nl2br($correctionNote) . "</div>
                             </div>";
                 }
 
                 $body .= "
-                            <p style='margin-top: 25px;'>
-                                ท่านสามารถตรวจสอบรายละเอียดเพิ่มเติมและดาวน์โหลดเอกสาร (ถ้ามี) ได้ที่:<br>
-                                <a href='" . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . "://{$_SERVER['HTTP_HOST']}/status.php' 
-                                   style='color: #1a237e; text-decoration: underline; font-weight: bold;'>
+                            <p style='margin-top: 30px; text-align: left;'>
+                                <a href='https://newbri.mcu.ac.th/app/rsa/status.php?id={$request['request_id']}' 
+                                   style='display: inline-block; padding: 12px 30px; background-color: #1a237e; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 16px; min-width: 200px; text-align: center;'>
                                    หน้าตรวจสอบสถานะคลิกที่นี่
                                 </a>
                             </p>
+                            <p style='margin-top: 20px; color: #666; font-size: 13px;'>
+                                หากปุ่มด้านบนไม่ทำงาน ท่านสามารถคัดลอกลิงก์ด้านล่างไปวางในบราวเซอร์ได้:<br>
+                                <span style='color: #1a237e; word-break: break-all;'>https://newbri.mcu.ac.th/app/rsa/status.php?id={$request['request_id']}</span>
+                            </p>
                             <hr style='border: none; border-top: 1px solid #eee; margin: 25px 0;'>
-                            <p style='font-size: 12px; color: #666;'>นี่คือการแจ้งเตือนอัตโนมัติจากระบบขอรับรองงานวิจัย สถาบันวิจัยพุทธศาสตร์ มจร</p>
+                            <p style='font-size: 12px; color: #999; text-align: center;'>นี่คือการแจ้งเตือนอัตโนมัติจากระบบขอรับรองงานวิจัย สถาบันวิจัยพุทธศาสตร์ มจร</p>
                         </div>
                     </div>";
 
                 sendMail($request['email'], $subject, $body);
 
-                $message = 'อัปเดตสถานะเรียบร้อยแล้ว';
-                $messageType = 'success';
+                header("Location: view.php?id=$id&updated=1");
+                exit;
                 break;
 
             case 'upload_cert':
@@ -105,8 +146,12 @@ try {
                         $sql = $action === 'upload_cert' ? "UPDATE requests SET file_rs_cert = ? WHERE id = ?" : "UPDATE requests SET file_correction = ? WHERE id = ?";
                         $stmt = $pdo->prepare($sql);
                         $stmt->execute([$dbPath, $id]);
-                        $message = 'อัปโหลดไฟล์สำเร็จ';
-                        $messageType = 'success';
+                        $redirectUrl = "view.php?id=$id&updated=1";
+                        if ($action === 'upload_cert') {
+                            $redirectUrl .= "&preset_status=approved";
+                        }
+                        header("Location: $redirectUrl");
+                        exit;
                     }
                 }
                 break;
@@ -166,12 +211,22 @@ include 'includes/header.php';
                             d="m1 9 4-4-4-4" />
                     </svg>
                     <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
-                        <?php echo $request['request_id']; ?>
+                        ตรวจสอบ: <?php echo $request['request_id']; ?>
                     </span>
                 </div>
             </li>
         </ol>
     </nav>
+    <div class="mt-4 flex justify-end">
+        <a href="edit.php?id=<?php echo $id; ?>"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
+            <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="m14.3 4.8 2.9 2.9M7 7H4a1 1 0 0 0-1 1v10c0 .6.4 1 1 1h11c.6 0 1-.4 1-1v-4.5m2.4-10a2 2 0 0 1 0 3l-6.8 6.8L8 14l.7-3.6 6.9-6.8a2 2 0 0 1 2.8 0Z" />
+            </svg>
+            แก้ไขข้อมูล
+        </a>
+    </div>
 </div>
 
 <?php if ($message): ?>
@@ -234,6 +289,18 @@ include 'includes/header.php';
                     </dd>
                 </div>
                 <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ตำแหน่งทางวิชาการที่ขอ</dt>
+                    <dd class="text-gray-900 dark:text-white">
+                        <?php echo htmlspecialchars($request['academic_position'] ?: '-'); ?>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">สาขาที่ขอ</dt>
+                    <dd class="text-gray-900 dark:text-white">
+                        <?php echo htmlspecialchars($request['branch'] ?: '-'); ?>
+                    </dd>
+                </div>
+                <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">อีเมล</dt>
                     <dd class="text-blue-600 dark:text-blue-400 underline">
                         <?php echo $request['email']; ?>
@@ -243,6 +310,12 @@ include 'includes/header.php';
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">โทรศัพท์</dt>
                     <dd class="text-gray-900 dark:text-white">
                         <?php echo $request['tel']; ?>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">วารสารที่ตีพิมพ์</dt>
+                    <dd class="text-gray-900 dark:text-white">
+                        <?php echo htmlspecialchars($request['journal_name'] ?: '-'); ?>
                     </dd>
                 </div>
                 <div>
@@ -285,8 +358,22 @@ include 'includes/header.php';
                             </span>
                         </div>
                         <?php if ($request[$field]): ?>
-                            <a href="../<?php echo $request[$field]; ?>" target="_blank"
-                                class="text-blue-600 hover:text-blue-800 text-sm font-medium">เปิดไฟล์</a>
+                            <?php
+                            $fileUrl = ensureSecureUrl($request[$field]);
+                            if (!preg_match('~^(?:f|ht)tps?://~i', $fileUrl)) {
+                                $fileUrl = '../' . $fileUrl;
+                            }
+                            ?>
+                            <a href="<?php echo htmlspecialchars($fileUrl); ?>" target="_blank"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                เปิดอ่านออนไลน์
+                            </a>
                         <?php else: ?>
                             <span class="text-xs text-gray-400 italic">ไม่ได้อัปโหลด</span>
                         <?php endif; ?>
@@ -301,47 +388,95 @@ include 'includes/header.php';
         <!-- Status Update -->
         <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">ดำเนินการอัปเดตสถานะ</h3>
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="update_status">
                 <div class="mb-4">
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">เปลี่ยนสถานะเป็น</label>
                     <select name="status" id="statusSelect"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <?php foreach ($STATUS_OPTIONS as $key => $opt): ?>
-                            <option value="<?php echo $key; ?>" <?php echo $request['status'] === $key ? 'selected' : ''; ?>>
+                        <?php
+                        $presetStatus = $_GET['preset_status'] ?? '';
+                        foreach ($STATUS_OPTIONS as $key => $opt):
+                            $isSelected = ($presetStatus === $key) || (empty($presetStatus) && $request['status'] === $key);
+                            ?>
+                            <option value="<?php echo $key; ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
                                 <?php echo $opt['label']; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div id="correctionArea"
-                    class="mb-4 <?php echo $request['status'] === 'correction' ? '' : 'hidden'; ?>">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">บันทึกแจ้งแก้ไข
-                        (ส่งถึงนักวิจัย)</label>
+                    class="mb-4 <?php echo in_array($request['status'], ['correction', 'ch_edit', 'rejected']) ? '' : 'hidden'; ?>">
+                    <label id="noteLabel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        <?php
+                        echo match ($request['status']) {
+                            'ch_edit' => 'บันทึกแจ้งแก้ไขข้อมูล (ส่งถึงนักวิจัย)',
+                            'correction' => 'บันทึกแจ้งแก้ไขรายงานวิจัย (ส่งถึงนักวิจัย)',
+                            'rejected' => 'เหตุผล (ส่งถึงนักวิจัย)',
+                            default => 'บันทึกแจ้งแก้ไข (ส่งถึงนักวิจัย)'
+                        };
+                        ?>
+                    </label>
                     <textarea name="correction_note" rows="3"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><?php echo htmlspecialchars($request['correction_note'] ?? ''); ?></textarea>
+
+                    <!-- Moved Correction Upload (Only for Status 3) -->
+                    <div id="correctionUploadArea"
+                        class="mt-4 <?php echo ($request['status'] === 'correction') ? '' : 'hidden'; ?>">
+                        <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">เอกสารแจ้งแก้ไขรายงานวิจัย
+                            (ถ้ามี)</p>
+                        <?php if ($request['file_correction']): ?>
+                            <div
+                                class="flex items-center justify-between mb-2 p-2 bg-orange-50 rounded border border-orange-200">
+                                <span class="text-[10px] text-orange-700 truncate max-w-[150px]">
+                                    <?php echo basename($request['file_correction']); ?>
+                                </span>
+                                <a href="<?php echo htmlspecialchars(ensureSecureUrl($request['file_correction'])); ?>"
+                                    target="_blank" class="text-blue-600 text-[10px] font-bold">เปิดอ่าน</a>
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" name="correction_file" accept=".pdf"
+                            class="block w-full text-[10px] text-gray-900 border border-gray-300 rounded cursor-pointer bg-gray-50 focus:outline-none mb-2">
+                        <p class="text-[9px] text-gray-400">* ไฟล์จะถูกอัปโหลดพร้อมกับการบันทึกสถานะ</p>
+                    </div>
                 </div>
-                <button type="submit"
-                    class="w-full text-white bg-mcu-blue hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700">
+                <div id="certWarning" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-xs text-red-600 font-bold flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        กรุณาอัปโหลดใบรับรองก่อนทำการอนุมัติ
+                    </p>
+                </div>
+                <button type="submit" id="saveStatusBtn"
+                    class="w-full text-white bg-mcu-blue hover:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700">
                     บันทึกสถานะ
                 </button>
             </form>
         </div>
 
-        <!-- Admin File Upload -->
-        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">แนบไฟล์จากเจ้าหน้าที่</h3>
+        <!-- Admin File Upload (Certificate Only) -->
+        <div id="adminCertArea"
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 <?php echo ($request['status'] === 'approved') ? '' : 'hidden'; ?>">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">ออกใบรับรอง</h3>
 
             <!-- Certificate -->
-            <div class="mb-6 pb-6 border-b dark:border-gray-700">
+            <div class="mb-4">
                 <p class="text-sm font-medium text-gray-900 dark:text-white mb-2">ใบรับรองงานวิจัย (Official)</p>
                 <?php if ($request['file_rs_cert']): ?>
                     <div class="flex items-center justify-between mb-2 p-2 bg-green-50 rounded border border-green-200">
                         <span class="text-xs text-green-700 truncate max-w-[150px]">
                             <?php echo basename($request['file_rs_cert']); ?>
                         </span>
-                        <a href="../<?php echo $request['file_rs_cert']; ?>" target="_blank"
-                            class="text-blue-600 text-xs">เปิดดู</a>
+                        <?php
+                        $certUrl = ensureSecureUrl($request['file_rs_cert']);
+                        if (!preg_match('~^(?:f|ht)tps?://~i', $certUrl)) {
+                            $certUrl = '../' . $certUrl;
+                        }
+                        ?>
+                        <a href="<?php echo htmlspecialchars($certUrl); ?>" target="_blank"
+                            class="text-blue-600 text-xs font-bold">เปิดอ่านออนไลน์</a>
                     </div>
                 <?php endif; ?>
                 <form method="POST" enctype="multipart/form-data">
@@ -350,29 +485,7 @@ include 'includes/header.php';
                         class="block w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 mb-2"
                         required>
                     <button type="submit"
-                        class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-xs px-3 py-2">อัปโหลด</button>
-                </form>
-            </div>
-
-            <!-- Correction Letter -->
-            <div>
-                <p class="text-sm font-medium text-gray-900 dark:text-white mb-2">เอกสารแจ้งแก้ไข (ถ้ามี)</p>
-                <?php if ($request['file_correction']): ?>
-                    <div class="flex items-center justify-between mb-2 p-2 bg-orange-50 rounded border border-orange-200">
-                        <span class="text-xs text-orange-700 truncate max-w-[150px]">
-                            <?php echo basename($request['file_correction']); ?>
-                        </span>
-                        <a href="../<?php echo $request['file_correction']; ?>" target="_blank"
-                            class="text-blue-600 text-xs">เปิดดู</a>
-                    </div>
-                <?php endif; ?>
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="upload_correction">
-                    <input type="file" name="file" accept=".pdf"
-                        class="block w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 mb-2"
-                        required>
-                    <button type="submit"
-                        class="text-white bg-orange-500 hover:bg-orange-600 font-medium rounded-lg text-xs px-3 py-2">อัปโหลด</button>
+                        class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-xs px-3 py-2">อัปโหลดใบรับรอง</button>
                 </form>
             </div>
         </div>
@@ -393,14 +506,57 @@ include 'includes/header.php';
 </div>
 
 <script>
-    document.getElementById('statusSelect').addEventListener('change', function () {
+    const hasCert = <?php echo !empty($request['file_rs_cert']) ? 'true' : 'false'; ?>;
+
+    function updateStatusUI() {
+        const statusSelect = document.getElementById('statusSelect');
         const area = document.getElementById('correctionArea');
-        if (this.value === 'correction') {
+        const label = document.getElementById('noteLabel');
+        const upload = document.getElementById('correctionUploadArea');
+        const certArea = document.getElementById('adminCertArea');
+        const warning = document.getElementById('certWarning');
+        const saveBtn = document.getElementById('saveStatusBtn');
+
+        const val = statusSelect.value;
+
+        // Handling Note Area and Labels
+        if (['correction', 'ch_edit', 'rejected'].includes(val)) {
             area.classList.remove('hidden');
+            if (val === 'ch_edit') {
+                label.textContent = 'บันทึกแจ้งแก้ไขข้อมูล (ส่งถึงนักวิจัย)';
+                upload.classList.add('hidden');
+            } else if (val === 'correction') {
+                label.textContent = 'บันทึกแจ้งแก้ไขรายงานวิจัย (ส่งถึงนักวิจัย)';
+                upload.classList.remove('hidden');
+            } else if (val === 'rejected') {
+                label.textContent = 'เหตุผล (ส่งถึงนักวิจัย)';
+                upload.classList.add('hidden');
+            }
+            certArea.classList.add('hidden');
+            warning.classList.add('hidden');
+            saveBtn.disabled = false;
         } else {
             area.classList.add('hidden');
+            if (val === 'approved') {
+                certArea.classList.remove('hidden');
+                if (!hasCert) {
+                    warning.classList.remove('hidden');
+                    saveBtn.disabled = true;
+                } else {
+                    warning.classList.add('hidden');
+                    saveBtn.disabled = false;
+                }
+            } else {
+                certArea.classList.add('hidden');
+                warning.classList.add('hidden');
+                saveBtn.disabled = false;
+            }
         }
-    });
+    }
+
+    document.getElementById('statusSelect').addEventListener('change', updateStatusUI);
+    // Initialize UI on load
+    updateStatusUI();
 </script>
 
 <?php

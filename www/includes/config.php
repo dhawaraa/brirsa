@@ -5,13 +5,20 @@
  */
 
 // Database settings
-define('DB_HOST', 'brirscer-db');
-define('DB_NAME', 'brirscer_db');
-define('DB_USER', 'root');
-define('DB_PASS', 'rootpassword');
+// Database settings
+define('DB_HOST', getenv('DB_HOST') ?: 'brirscer-db');
+define('DB_NAME', getenv('DB_NAME') ?: 'brirscer_db');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: 'rootpassword');
+
+// Allow local override for simple hosting environments
+if (file_exists(__DIR__ . '/local.php')) {
+    include __DIR__ . '/local.php';
+}
 
 // Site settings
 define('SITE_NAME', 'ระบบขอรับรองงานวิจัย');
+define('GOOGLE_CHAT_WEBHOOK', 'https://chat.googleapis.com/v1/spaces/AAQABviegDk/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=yFxZtT0UlHi1iR8UGjEBjq50_AKl9ITt_d5g-Qsr5Vg');
 define('SITE_SUBTITLE', 'สถาบันวิจัยพุทธศาสตร์ | มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย');
 define('LOGO_URL', 'https://newbri.mcu.ac.th/wp-content/uploads/2025/10/mcu-logo-Large-Phone.png');
 
@@ -79,10 +86,11 @@ $AFFILIATIONS = [
 
 // สถานะและสี
 $STATUS_OPTIONS = [
+    'resubmitted' => ['label' => '0. นักวิจัยส่งข้อมูลแก้ไขแล้ว', 'color' => 'blue', 'icon' => 'refresh-cw'],
     'checking' => ['label' => '1. เจ้าหน้าที่ตรวจสอบเอกสาร', 'color' => 'blue', 'icon' => 'file-text'],
+    'ch_edit' => ['label' => '1.5 นักวิจัยแก้ไขข้อมูลเอกสาร', 'color' => 'orange', 'icon' => 'edit-3'],
     'committee' => ['label' => '2. เสนอกรรมการพิจารณา', 'color' => 'purple', 'icon' => 'users'],
-    'correction' => ['label' => '3. ส่งกลับให้นักวิจัยแก้ไข', 'color' => 'orange', 'icon' => 'edit-3'],
-    'resubmitted' => ['label' => '3.5 นักวิจัยส่งข้อมูลแก้ไขแล้ว', 'color' => 'blue', 'icon' => 'refresh-cw'],
+    'correction' => ['label' => '3. นักวิจัยแก้ไขรายงานวิจัย', 'color' => 'orange', 'icon' => 'file-text'],
     'rejected' => ['label' => '4. ไม่รับรอง', 'color' => 'red', 'icon' => 'x'],
     'approved' => ['label' => '5. อนุมัติรับรอง', 'color' => 'green', 'icon' => 'check-circle']
 ];
@@ -131,4 +139,23 @@ function formatThaiDate($date)
 function sanitize($input)
 {
     return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Ensure URL uses HTTPS and handle old domains
+ */
+function ensureSecureUrl($url)
+{
+    if (empty($url))
+        return '';
+
+    // Convert http to https for internal domains
+    $internalDomains = ['bri.mcu.ac.th', 'newbri.mcu.ac.th'];
+    foreach ($internalDomains as $domain) {
+        if (stripos($url, 'http://' . $domain) === 0) {
+            $url = 'https://' . substr($url, 7);
+        }
+    }
+
+    return $url;
 }

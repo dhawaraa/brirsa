@@ -13,12 +13,12 @@ require_once __DIR__ . '/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/PHPMailer/SMTP.php';
 
 // SMTP Settings
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587); // 587 for TLS, 465 for SSL
-define('SMTP_USER', 'bri.it@mcu.ac.th');
-define('SMTP_PASS', 'lofz hwxq kfoz isuu'); // ต้องใช้ App Password เท่านั้น
-define('SMTP_FROM', 'bri.it@mcu.ac.th');
-define('SMTP_FROM_NAME', 'สถาบันวิจัยพุทธศาสตร์ มจร');
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 587); // 587 for TLS, 465 for SSL
+define('SMTP_USER', getenv('SMTP_USER') ?: 'bri.it@mcu.ac.th');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: 'lofz hwxq kfoz isuu');
+define('SMTP_FROM', getenv('SMTP_FROM') ?: 'bri.it@mcu.ac.th');
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'สถาบันวิจัยพุทธศาสตร์ มจร');
 
 /**
  * Send email helper
@@ -47,6 +47,7 @@ function sendMail($to, $subject, $body)
         $mail->Password = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = SMTP_PORT;
+        $mail->Timeout = 10; // Set timeout for mail server connection
 
         // Recipients
         $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);

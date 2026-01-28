@@ -60,7 +60,6 @@ echo "\xEF\xBB\xBF"; // UTF-8 BOM for Thai support
             <th>ชื่อผู้ขอ</th>
             <th>สังกัด</th>
             <th>ชื่อโครงการ</th>
-            <th>งบประมาณ</th>
             <th>สถานะ</th>
         </tr>
     </thead>
@@ -89,9 +88,6 @@ echo "\xEF\xBB\xBF"; // UTF-8 BOM for Thai support
                 </td>
                 <td>
                     <?php echo htmlspecialchars($r['project_title']); ?>
-                </td>
-                <td>
-                    <?php echo number_format($r['budget'], 2); ?>
                 </td>
                 <td>
                     <?php echo $statusLabel; ?>

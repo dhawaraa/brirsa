@@ -81,9 +81,13 @@ require_once '../includes/config.php';
                         </svg>
                     </button>
                     <a href="dashboard.php" class="flex ms-2 md:me-24">
-                        <img src="<?php echo LOGO_URL; ?>" class="h-8 me-3" alt="Logo" />
-                        <span
-                            class="self-center text-xl font-bold sm:text-2xl whitespace-nowrap dark:text-white">ระบบรับรองงานวิจัย</span>
+                        <img src="<?php echo LOGO_URL; ?>" class="h-8 me-2" alt="Logo" />
+                        <div class="self-center flex flex-col items-start leading-tight">
+                            <span
+                                class="text-sm font-bold sm:text-lg whitespace-nowrap dark:text-white">ระบบรับรองงานวิจัย</span>
+                            <span
+                                class="text-[9px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">สถาบันวิจัยพุทธศาสตร์</span>
+                        </div>
                     </a>
                 </div>
                 <div class="flex items-center">
@@ -102,18 +106,22 @@ require_once '../includes/config.php';
                         </svg>
                     </button>
 
-                    <div class="flex items-center ms-3 space-x-4">
+                    <div class="flex items-center ms-1 sm:ms-3 space-x-1 sm:space-x-4">
                         <div class="flex items-center text-sm font-medium text-gray-900 dark:text-white">
                             <div
-                                class="w-8 h-8 rounded-full bg-mcu-blue text-white flex items-center justify-center font-bold me-2">
+                                class="w-8 h-8 rounded-full bg-mcu-blue text-white flex items-center justify-center font-bold sm:me-2">
                                 <?php echo mb_substr($_SESSION['admin_name'], 0, 1); ?>
                             </div>
                             <span
-                                class="hidden sm:block"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                                class="hidden md:block"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
                         </div>
                         <a href="logout.php"
-                            class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-2 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-150">
-                            ออกจากระบบ
+                            class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-2.5 py-2 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-150 flex items-center">
+                            <svg class="w-4 h-4 sm:me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span class="hidden sm:inline ms-1">ออกจากระบบ</span>
                         </a>
                     </div>
                 </div>
@@ -164,6 +172,20 @@ require_once '../includes/config.php';
                                 <?php echo $newCount; ?>
                             </span>
                         <?php endif; ?>
+                    </a>
+                </li>
+                <li>
+                    <a href="send_info.php"
+                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'send_info.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                            <path
+                                d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                        </svg>
+                        <span class="ms-3">ส่งเมลแจ้งข้อมูล</span>
                     </a>
                 </li>
                 <li>
