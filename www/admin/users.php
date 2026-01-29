@@ -7,6 +7,9 @@ include 'includes/header.php';
 
 $pdo = getDB();
 
+// Only Super Admin can access this page
+check_role('super_admin');
+
 // Handle Actions
 $success = '';
 $error = '';
@@ -16,15 +19,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $username = sanitize($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $name = sanitize($_POST['name'] ?? '');
+    $role = sanitize($_POST['role'] ?? 'super_admin');
 
     if ($username && $password && $name) {
         try {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO admins (username, password, name) VALUES (?, ?, ?)");
-            $stmt->execute([$username, $hashedPassword, $name]);
+            $stmt = $pdo->prepare("INSERT INTO admins (username, password, name, role) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$username, $hashedPassword, $name, $role]);
             $success = "เพิ่มผู้ใช้งานสำเร็จ";
         } catch (PDOException $e) {
-            $error = "ไม่สามารถเพิ่มผู้ใช้งานได้ (อาจมีชื่อผู้ใช้งานนี้แล้ว)";
+            $error = "ไม่สามารถเพิ่มผู้ใช้งานได้: " . $e->getMessage();
         }
     } else {
         $error = "กรุณากรอกข้อมูลให้ครบถ้วน";
@@ -37,22 +41,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $username = sanitize($_POST['username'] ?? '');
     $name = sanitize($_POST['name'] ?? '');
     $password = $_POST['password'] ?? '';
+    $role = sanitize($_POST['role'] ?? 'super_admin');
 
     if ($id && $username && $name) {
         try {
             if (!empty($password)) {
                 // Update with new password
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE admins SET username = ?, name = ?, password = ? WHERE id = ?");
-                $stmt->execute([$username, $name, $hashedPassword, $id]);
+                $stmt = $pdo->prepare("UPDATE admins SET username = ?, name = ?, role = ?, password = ? WHERE id = ?");
+                $stmt->execute([$username, $name, $role, $hashedPassword, $id]);
             } else {
                 // Update without changing password
-                $stmt = $pdo->prepare("UPDATE admins SET username = ?, name = ? WHERE id = ?");
-                $stmt->execute([$username, $name, $id]);
+                $stmt = $pdo->prepare("UPDATE admins SET username = ?, name = ?, role = ? WHERE id = ?");
+                $stmt->execute([$username, $name, $role, $id]);
             }
             $success = "อัปเดตข้อมูลผู้ใช้งานสำเร็จ";
         } catch (PDOException $e) {
-            $error = "ไม่สามารถอัปเดตข้อมูลได้ (อาจมีชื่อผู้ใช้งานนี้แล้ว)";
+            if ($e->getCode() == '42S22') {
+                $error = "❌ <b>ระบบยังไม่พร้อม:</b> ตารางในฐานข้อมูลยังไม่ได้รับการอัปเดต ครับ<br><br>";
+                $error .= "<a href='../migrate_rbac.php' style='background:red; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;'>คลิกที่นี่เพื่อกดปุ่มอัปเดต (Fix Database Now)</a>";
+            } else {
+                $error = "ไม่สามารถอัปเดตข้อมูลได้: " . $e->getMessage();
+            }
         }
     } else {
         $error = "กรุณากรอกข้อมูลให้ครบถ้วน";
@@ -88,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Get all admins
 $stmt = $pdo->query("SELECT * FROM admins ORDER BY created_at DESC");
 $admins = $stmt->fetchAll();
+
+$ROLE_LABELS = [
+    'super_admin' => ['label' => 'ผู้ดูแลระบบ', 'color' => 'blue'],
+    'data_admin' => ['label' => 'ผู้ดูแลข้อมูล', 'color' => 'green'],
+    'executive' => ['label' => 'ผู้บริหาร', 'color' => 'purple']
+];
 ?>
 
 <div class="mb-6 flex justify-between items-center">
@@ -159,6 +175,7 @@ $admins = $stmt->fetchAll();
             <tr>
                 <th scope="col" class="px-6 py-3">ชื่อ-นามสกุล</th>
                 <th scope="col" class="px-6 py-3">ชื่อผู้ใช้งาน</th>
+                <th scope="col" class="px-6 py-3">สิทธิ์การใช้งาน</th>
                 <th scope="col" class="px-6 py-3">วันที่เพิ่ม</th>
                 <th scope="col" class="px-6 py-3 text-center">การจัดการ</th>
             </tr>
@@ -174,6 +191,16 @@ $admins = $stmt->fetchAll();
                     </th>
                     <td class="px-6 py-4">
                         <?php echo htmlspecialchars($admin['username']); ?>
+                    </td>
+                    <td class="px-6 py-4">
+                        <?php
+                        $roleKey = $admin['role'] ?? 'super_admin';
+                        $roleInfo = $ROLE_LABELS[$roleKey] ?? ['label' => $roleKey, 'color' => 'gray'];
+                        ?>
+                        <span
+                            class="bg-<?php echo $roleInfo['color']; ?>-100 text-<?php echo $roleInfo['color']; ?>-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-<?php echo $roleInfo['color']; ?>-900 dark:text-<?php echo $roleInfo['color']; ?>-300">
+                            <?php echo $roleInfo['label']; ?>
+                        </span>
                     </td>
                     <td class="px-6 py-4 text-xs font-mono">
                         <?php echo $admin['created_at']; ?>
@@ -241,6 +268,17 @@ $admins = $stmt->fetchAll();
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                             required />
                     </div>
+                    <div>
+                        <label for="role"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">สิทธิ์การใช้งาน</label>
+                        <select name="role" id="role"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                            required>
+                            <option value="super_admin">ผู้ดูแลระบบ (จัดได้ทุกอย่าง)</option>
+                            <option value="data_admin">ผู้ดูแลข้อมูล (ยกเว้น CSV)</option>
+                            <option value="executive">ผู้บริหาร (ดูภาพรวมอย่างเดียว)</option>
+                        </select>
+                    </div>
                     <button type="submit"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">บันทึกข้อมูล</button>
                 </form>
@@ -295,6 +333,17 @@ $admins = $stmt->fetchAll();
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" />
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             ปล่อยว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน</p>
+                    </div>
+                    <div>
+                        <label for="edit_role"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">สิทธิ์การใช้งาน</label>
+                        <select name="role" id="edit_role"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                            required>
+                            <option value="super_admin">ผู้ดูแลระบบ</option>
+                            <option value="data_admin">ผู้ดูแลข้อมูล</option>
+                            <option value="executive">ผู้บริหาร</option>
+                        </select>
                     </div>
                     <button type="submit"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">บันทึกการแก้ไข</button>
@@ -351,6 +400,7 @@ $admins = $stmt->fetchAll();
         document.getElementById('edit_admin_id').value = admin.id;
         document.getElementById('edit_name').value = admin.name;
         document.getElementById('edit_username').value = admin.username;
+        document.getElementById('edit_role').value = admin.role || 'super_admin';
         document.getElementById('edit_password').value = '';
 
         // Use Flowbite's modal API

@@ -6,6 +6,9 @@ $pageTitle = "รายการยื่นขอรับรอง";
 require_once '../includes/config.php';
 $pdo = getDB();
 
+// Access Control
+check_role(['super_admin', 'data_admin']);
+
 
 // Filters
 $filterStatus = $_GET['status'] ?? 'all';

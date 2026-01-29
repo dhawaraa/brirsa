@@ -28,11 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($admin && password_verify($password, $admin['password'])) {
                 $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['admin_username'] = $admin['username'];
                 $_SESSION['admin_name'] = $admin['name'];
+                $_SESSION['admin_role'] = $admin['role'] ?? 'super_admin'; // Default to super_admin if not set
+
                 header('Location: dashboard.php');
                 exit;
             } else {
-                $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+                $error = 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง';
             }
         } catch (Exception $e) {
             $error = 'เกิดข้อผิดพลาด: ' . $e->getMessage();

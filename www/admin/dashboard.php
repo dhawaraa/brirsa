@@ -44,19 +44,23 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
             <?php echo formatThaiDate(date('Y-m-d H:i:s')); ?>
         </p>
     </div>
-    <div class="flex space-x-3">
-        <a href="requests.php"
-            class="px-5 py-2.5 text-sm font-medium text-white bg-mcu-blue rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none transition-all">
-            ดูรายการทั้งหมด
-        </a>
-    </div>
+    <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+        <div class="flex space-x-3">
+            <a href="requests.php"
+                class="px-5 py-2.5 text-sm font-medium text-white bg-mcu-blue rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none transition-all">
+                ดูรายการทั้งหมด
+            </a>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Statistics Cards (Softer Design) -->
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
     <!-- Total -->
-    <a href="requests.php?status=all"
-        class="block p-4 bg-white border-l-4 border-indigo-600 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <?php $canViewRequests = is_role('super_admin') || is_role('data_admin'); ?>
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=all"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-indigo-600 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor"
@@ -70,11 +74,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
         </div>
         <h3 class="text-2xl font-bold text-gray-900 dark:text-white"><?php echo number_format($stats['total']); ?></h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">คำขอทั้งหมด</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 
     <!-- Checking -->
-    <a href="requests.php?status=checking"
-        class="block p-4 bg-white border-l-4 border-amber-400 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=checking"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-amber-400 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
@@ -90,11 +95,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
             <?php echo number_format($stats['checking'] + $stats['resubmitted']); ?>
         </h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">รอการตรวจสอบ/ตรวจซ้ำ</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 
     <!-- Committee -->
-    <a href="requests.php?status=committee"
-        class="block p-4 bg-white border-l-4 border-purple-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=committee"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-purple-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
@@ -109,11 +115,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
         <h3 class="text-2xl font-bold text-gray-900 dark:text-white"><?php echo number_format($stats['committee']); ?>
         </h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">เสนอกรรมการ</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 
     <!-- Correction -->
-    <a href="requests.php?status=correction"
-        class="block p-4 bg-white border-l-4 border-orange-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=correction"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-orange-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor"
@@ -129,11 +136,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
             <?php echo number_format($stats['correction'] + $stats['ch_edit']); ?>
         </h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">อยู่ระหว่างนักวิจัยแก้ไข</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 
     <!-- Rejected -->
-    <a href="requests.php?status=rejected"
-        class="block p-4 bg-white border-l-4 border-red-600 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=rejected"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-red-600 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-red-50 dark:bg-red-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
@@ -148,11 +156,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
         <h3 class="text-2xl font-bold text-gray-900 dark:text-white"><?php echo number_format($stats['rejected']); ?>
         </h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">ไม่รับรอง</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 
     <!-- Approved -->
-    <a href="requests.php?status=approved"
-        class="block p-4 bg-white border-l-4 border-emerald-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02]">
+    <<?php echo $canViewRequests ? 'a href="requests.php?status=approved"' : 'div'; ?>
+        class="block p-4 bg-white border-l-4 border-emerald-500 rounded-xl shadow-sm dark:bg-gray-800 transition-all
+        <?php echo $canViewRequests ? 'hover:shadow-md hover:scale-[1.02]' : ''; ?>">
         <div class="flex items-center justify-between mb-2">
             <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
                 <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
@@ -167,7 +176,7 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
         <h3 class="text-2xl font-bold text-gray-900 dark:text-white"><?php echo number_format($stats['approved']); ?>
         </h3>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">อนุมัติรับรอง</p>
-    </a>
+    </<?php echo $canViewRequests ? 'a' : 'div'; ?>>
 </div>
 
 
@@ -277,13 +286,15 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
     <div
         class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-700/30">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">คำขอล่าสุด</h3>
-        <a href="requests.php"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-            ดูรายการทั้งหมด
-            <svg class="w-4 h-4 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-        </a>
+        <?php if ($canViewRequests): ?>
+            <a href="requests.php"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                ดูรายการทั้งหมด
+                <svg class="w-4 h-4 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+            </a>
+        <?php endif; ?>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
@@ -293,7 +304,9 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
                     <th class="px-6 py-4">ชื่อผู้ยื่นขอ</th>
                     <th class="px-6 py-4">ชื่อโครงการวิจัย</th>
                     <th class="px-6 py-4">สถานะ</th>
-                    <th class="px-6 py-4 text-center">จัดการ</th>
+                    <?php if ($canViewRequests): ?>
+                        <th class="px-6 py-4 text-center">จัดการ</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -361,10 +374,12 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
                                 <?php echo $st['label']; ?>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <a href="view.php?id=<?php echo $req['id']; ?>"
-                                class="text-blue-600 hover:text-blue-800 font-bold text-xs p-2 bg-blue-50 rounded-lg dark:bg-blue-900/20 dark:hover:bg-blue-900/40">ตรวจสอบ</a>
-                        </td>
+                        <?php if ($canViewRequests): ?>
+                            <td class="px-6 py-4 text-center">
+                                <a href="view.php?id=<?php echo $req['id']; ?>"
+                                    class="text-blue-600 hover:text-blue-800 font-bold text-xs p-2 bg-blue-50 rounded-lg dark:bg-blue-900/20 dark:hover:bg-blue-900/40">ตรวจสอบ</a>
+                            </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

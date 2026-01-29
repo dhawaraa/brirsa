@@ -9,17 +9,8 @@
  */
 function secure_session_start()
 {
+    // RBAC_SECURITY_V6
     if (session_status() === PHP_SESSION_NONE) {
-        // Force session cookies to be HttpOnly and use Lax SameSite
-        ini_set('session.cookie_httponly', 1);
-        ini_set('session.use_only_cookies', 1);
-        ini_set('session.cookie_samesite', 'Lax');
-
-        // Use secure cookies if on HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', 1);
-        }
-
         session_start();
     }
 
@@ -60,6 +51,63 @@ function verify_csrf()
             die('ความปลอดภัยล้มเหลว: CSRF Token ไม่ถูกต้อง (Security Error: Invalid CSRF Token)');
         }
     }
+}
+
+/**
+ * Check if current user has one of the allowed roles
+ * @param array|string $allowed_roles
+ */
+function check_role($allowed_roles)
+{
+    secure_session_start();
+
+    if (!isset($_SESSION['admin_id'])) {
+        header('Location: index.php');
+        exit;
+    }
+
+    $current_role = $_SESSION['admin_role'] ?? 'super_admin';
+    if ($current_role === '') {
+        $current_role = 'super_admin';
+    }
+
+    // Super Admin always passes
+    if ($current_role === 'super_admin') {
+        return;
+    }
+
+    if (is_string($allowed_roles)) {
+        $allowed_roles = [$allowed_roles];
+    }
+
+    if (!in_array($current_role, $allowed_roles)) {
+        header('HTTP/1.1 403 Forbidden');
+        // If not enough permission, go to dashboard
+        if (basename($_SERVER['PHP_SELF']) !== 'dashboard.php') {
+            header('Location: dashboard.php?error=permission');
+            exit;
+        }
+        die('ท่านไม่มีสิทธิ์เข้าถึงหน้านี้ (Access Denied)');
+    }
+}
+
+/**
+ * Check if current user has a specific role
+ */
+function is_role($role)
+{
+    secure_session_start();
+    $current = $_SESSION['admin_role'] ?? 'super_admin';
+    if ($current === '') {
+        $current = 'super_admin';
+    }
+
+    // Super admin always has the power of other roles for UI purposes
+    if ($current === 'super_admin') {
+        return true;
+    }
+
+    return $current === $role;
 }
 
 /**

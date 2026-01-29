@@ -8,6 +8,9 @@ include 'includes/header.php';
 
 $pdo = getDB();
 
+// Access Control
+check_role('super_admin');
+
 // Status mapping from old system to new system
 $statusMapping = [
     'เจ้าหน้าที่ตรวจสอบเอกสาร' => 'checking',

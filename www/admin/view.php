@@ -6,6 +6,9 @@ $pageTitle = "ตรวจสอบข้อมูลคำขอ";
 
 require_once '../includes/config.php';
 
+// Access Control
+check_role(['super_admin', 'data_admin']);
+
 $id = intval($_GET['id'] ?? 0);
 $pdo = getDB();
 

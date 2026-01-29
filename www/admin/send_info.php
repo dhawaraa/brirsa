@@ -6,6 +6,9 @@ $pageTitle = "ส่งข้อมูลโครงการวิจัยท
 require_once '../includes/config.php';
 $pdo = getDB();
 
+// Access Control
+check_role(['super_admin', 'data_admin']);
+
 // Filters
 $filterStatus = sanitize($_GET['status'] ?? 'all');
 $filterSearch = sanitize($_GET['search'] ?? '');

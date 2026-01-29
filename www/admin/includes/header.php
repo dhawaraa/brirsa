@@ -2,6 +2,7 @@
 /**
  * Admin Header & Sidebar - ระบบจัดการหลังบ้าน (Flowbite)
  */
+// RBAC_DEBUG_V5
 require_once '../includes/security.php';
 secure_session_start();
 verify_csrf();
@@ -114,6 +115,18 @@ require_once '../includes/config.php';
                             </div>
                             <span
                                 class="hidden md:block"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                            <?php
+                            $roleMap = [
+                                'super_admin' => ['label' => 'Super Admin', 'color' => 'blue'],
+                                'data_admin' => ['label' => 'Data Admin', 'color' => 'green'],
+                                'executive' => ['label' => 'Executive', 'color' => 'purple']
+                            ];
+                            $roleInfo = $roleMap[$_SESSION['admin_role'] ?? 'super_admin'] ?? ['label' => 'Admin', 'color' => 'gray'];
+                            ?>
+                            <span
+                                class="hidden sm:inline-flex items-center bg-<?php echo $roleInfo['color']; ?>-100 text-<?php echo $roleInfo['color']; ?>-800 text-[10px] font-medium px-2 py-0.5 rounded-full ms-2 dark:bg-<?php echo $roleInfo['color']; ?>-900 dark:text-<?php echo $roleInfo['color']; ?>-300">
+                                <?php echo $roleInfo['label']; ?>
+                            </span>
                         </div>
                         <a href="logout.php"
                             class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-2.5 py-2 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-150 flex items-center">
@@ -148,74 +161,79 @@ require_once '../includes/config.php';
                         <span class="ms-3">ภาพรวมระบบ</span>
                     </a>
                 </li>
-                <li>
-                    <a href="requests.php"
-                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'requests.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
-                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M7.502 6h7.128A3.375 3.375 0 0118 9.375v9.375a3 3 0 003-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 00-.673-.05A3 3 0 0015 1.5h-1.5a3 3 0 00-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6zM13.5 3A1.5 1.5 0 0012 4.5h4.5A1.5 1.5 0 0015 3h-1.5z"
-                                clip-rule="evenodd" />
-                            <path fill-rule="evenodd"
-                                d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 013 20.625V9.375zm9.586 4.594a.75.75 0 00-1.172-.938l-2.476 3.096-.908-.907a.75.75 0 00-1.06 1.06l1.5 1.5a.75.75 0 001.116-.062l3-3.75z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">รายการยื่นขอรับรอง</span>
-                        <?php
-                        $pdo = getDB();
-                        $newCount = $pdo->query("SELECT COUNT(*) FROM requests WHERE status = 'checking'")->fetchColumn();
-                        if ($newCount > 0):
-                            ?>
-                            <span
-                                class="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                                <?php echo $newCount; ?>
-                            </span>
-                        <?php endif; ?>
-                    </a>
-                </li>
-                <li>
-                    <a href="send_info.php"
-                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'send_info.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
-                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                            <path
-                                d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-                        </svg>
-                        <span class="ms-3">ส่งเมลแจ้งข้อมูล</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="import_csv.php"
-                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'import_csv.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
-                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M9 7V2.221a2 2 0 00-.5.365L4.586 6.5a2 2 0 00-.365.5H9zm2 0V2h7a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V9h5a2 2 0 002-2zm-1 9a1 1 0 10-2 0v2a1 1 0 102 0v-2zm2-5a1 1 0 011 1v6a1 1 0 11-2 0v-6a1 1 0 011-1zm4 4a1 1 0 10-2 0v2a1 1 0 102 0v-2z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">นำเข้าข้อมูล CSV</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="users.php"
-                        class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
-                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A12.696 12.696 0 0112 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 01-.372-.568 6.787 6.787 0 011.019-4.38z"
-                                clip-rule="evenodd" />
-                            <path
-                                d="M5.082 14.254a8.287 8.287 0 00-1.308 5.135 9.687 9.687 0 01-1.764-.44l-.115-.04a.563.563 0 01-.373-.487l-.01-.121a3.75 3.75 0 013.57-4.047zM20.226 19.389a8.287 8.287 0 00-1.308-5.135 3.75 3.75 0 013.57 4.047l-.01.121a.563.563 0 01-.373.486l-.115.04c-.567.2-1.156.349-1.764.441z" />
-                        </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">จัดการผู้ใช้งาน</span>
-                    </a>
-                </li>
+                <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+                    <li>
+                        <a href="requests.php"
+                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'requests.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M7.502 6h7.128A3.375 3.375 0 0118 9.375v9.375a3 3 0 003-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 00-.673-.05A3 3 0 0015 1.5h-1.5a3 3 0 00-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6zM13.5 3A1.5 1.5 0 0012 4.5h4.5A1.5 1.5 0 0015 3h-1.5z"
+                                    clip-rule="evenodd" />
+                                <path fill-rule="evenodd"
+                                    d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 013 20.625V9.375zm9.586 4.594a.75.75 0 00-1.172-.938l-2.476 3.096-.908-.907a.75.75 0 00-1.06 1.06l1.5 1.5a.75.75 0 001.116-.062l3-3.75z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span class="flex-1 ms-3 whitespace-nowrap">รายการยื่นขอรับรอง</span>
+                            <?php
+                            $pdo = getDB();
+                            $newCount = $pdo->query("SELECT COUNT(*) FROM requests WHERE status = 'checking'")->fetchColumn();
+                            if ($newCount > 0):
+                                ?>
+                                <span
+                                    class="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
+                                    <?php echo $newCount; ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="send_info.php"
+                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'send_info.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                                <path
+                                    d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                            </svg>
+                            <span class="ms-3">ส่งเมลแจ้งข้อมูล</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <?php if (is_role('super_admin')): ?>
+                    <li>
+                        <a href="import_csv.php"
+                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'import_csv.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M9 7V2.221a2 2 0 00-.5.365L4.586 6.5a2 2 0 00-.365.5H9zm2 0V2h7a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V9h5a2 2 0 002-2zm-1 9a1 1 0 10-2 0v2a1 1 0 102 0v-2zm2-5a1 1 0 011 1v6a1 1 0 11-2 0v-6a1 1 0 011-1zm4 4a1 1 0 10-2 0v2a1 1 0 102 0v-2z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span class="flex-1 ms-3 whitespace-nowrap">นำเข้าข้อมูล CSV</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="users.php"
+                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A12.696 12.696 0 0112 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 01-.372-.568 6.787 6.787 0 011.019-4.38z"
+                                    clip-rule="evenodd" />
+                                <path
+                                    d="M5.082 14.254a8.287 8.287 0 00-1.308 5.135 9.687 9.687 0 01-1.764-.44l-.115-.04a.563.563 0 01-.373-.487l-.01-.121a3.75 3.75 0 013.57-4.047zM20.226 19.389a8.287 8.287 0 00-1.308-5.135 3.75 3.75 0 013.57 4.047l-.01.121a.563.563 0 01-.373.486l-.115.04c-.567.2-1.156.349-1.764.441z" />
+                            </svg>
+                            <span class="flex-1 ms-3 whitespace-nowrap">จัดการผู้ใช้งาน</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
                 <li class="pt-4 mt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
                     <a href="../" target="_blank"
                         class="flex items-center p-2 text-gray-700 rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group">
