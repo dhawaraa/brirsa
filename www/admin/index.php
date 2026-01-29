@@ -2,7 +2,9 @@
 /**
  * Admin Login Page V2 (Flowbite)
  */
-session_start();
+require_once '../includes/security.php';
+secure_session_start();
+verify_csrf();
 
 if (isset($_SESSION['admin_id'])) {
     header('Location: dashboard.php');
@@ -105,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="POST" class="space-y-6">
+                <?php csrf_field(); ?>
                 <div>
                     <label for="username"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ชื่อผู้ใช้งาน</label>

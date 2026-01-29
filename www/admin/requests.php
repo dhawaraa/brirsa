@@ -193,6 +193,7 @@ $exportUrl = "export_requests.php?" . $queryString;
             </thead>
             <tbody>
                 <form id="bulkActionForm" method="POST">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="bulk_delete">
                     <?php foreach ($requests as $r):
                         $statusInfo = $STATUS_OPTIONS[$r['status']] ?? $STATUS_OPTIONS['checking'];

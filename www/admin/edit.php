@@ -154,6 +154,7 @@ include 'includes/header.php';
 <?php endif; ?>
 
 <form method="POST" enctype="multipart/form-data">
+    <?php csrf_field(); ?>
     <input type="hidden" name="action" value="edit_request">
 
     <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
@@ -254,12 +255,16 @@ include 'includes/header.php';
                     <a href="requests.php"
                         class="text-sm text-gray-500 hover:text-gray-700 hover:underline">ยกเลิกและย้อนกลับ</a>
                 </div>
-                <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <div
+                    class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg dark:bg-gray-700 dark:border-gray-600">
                     <p class="text-[11px] text-orange-800 dark:text-orange-300 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd"></path>
                         </svg>
-                        <strong>หมายเหตุ:</strong> การแก้ไขข้อมูลในหน้านี้จะมีผลโดยตรงต่อฐานข้อมูล โปรดตรวจสอบความถูกต้องก่อนกดบันทึก
+                        <strong>หมายเหตุ:</strong> การแก้ไขข้อมูลในหน้านี้จะมีผลโดยตรงต่อฐานข้อมูล
+                        โปรดตรวจสอบความถูกต้องก่อนกดบันทึก
                     </p>
                 </div>
             </div>
@@ -291,9 +296,13 @@ include 'includes/header.php';
                                     class="block w-full text-[10px] text-gray-900 border border-gray-300 rounded cursor-pointer bg-white dark:text-gray-400 focus:outline-none dark:bg-gray-800 dark:border-gray-600">
                                 <?php if ($request[$field]): ?>
                                     <a href="../<?php echo $request[$field]; ?>" target="_blank"
-                                        class="shrink-0 p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200" title="ดูไฟล์ปัจจุบัน">
+                                        class="shrink-0 p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+                                        title="ดูไฟล์ปัจจุบัน">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </a>
                                 <?php endif; ?>

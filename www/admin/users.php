@@ -217,6 +217,7 @@ $admins = $stmt->fetchAll();
             </div>
             <div class="p-4 md:p-5">
                 <form class="space-y-4" method="POST">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="add_admin">
                     <div>
                         <label for="name"
@@ -270,6 +271,7 @@ $admins = $stmt->fetchAll();
             </div>
             <div class="p-4 md:p-5">
                 <form class="space-y-4" method="POST">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="edit_admin">
                     <input type="hidden" name="admin_id" id="edit_admin_id">
                     <div>
@@ -329,6 +331,7 @@ $admins = $stmt->fetchAll();
                     <p class="text-red-600 dark:text-red-400 font-medium">⚠️ การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
                 </div>
                 <form method="POST">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="delete_admin">
                     <input type="hidden" name="admin_id" id="delete_admin_id">
                     <div class="flex gap-2">
@@ -344,27 +347,27 @@ $admins = $stmt->fetchAll();
 </div>
 
 <script>
-function openEditModal(admin) {
-    document.getElementById('edit_admin_id').value = admin.id;
-    document.getElementById('edit_name').value = admin.name;
-    document.getElementById('edit_username').value = admin.username;
-    document.getElementById('edit_password').value = '';
-    
-    // Use Flowbite's modal API
-    const $modalElement = document.getElementById('edit-user-modal');
-    const modal = new Modal($modalElement);
-    modal.show();
-}
+    function openEditModal(admin) {
+        document.getElementById('edit_admin_id').value = admin.id;
+        document.getElementById('edit_name').value = admin.name;
+        document.getElementById('edit_username').value = admin.username;
+        document.getElementById('edit_password').value = '';
 
-function openDeleteModal(id, name) {
-    document.getElementById('delete_admin_id').value = id;
-    document.getElementById('delete_user_name').textContent = name;
-    
-    // Use Flowbite's modal API
-    const $modalElement = document.getElementById('delete-user-modal');
-    const modal = new Modal($modalElement);
-    modal.show();
-}
+        // Use Flowbite's modal API
+        const $modalElement = document.getElementById('edit-user-modal');
+        const modal = new Modal($modalElement);
+        modal.show();
+    }
+
+    function openDeleteModal(id, name) {
+        document.getElementById('delete_admin_id').value = id;
+        document.getElementById('delete_user_name').textContent = name;
+
+        // Use Flowbite's modal API
+        const $modalElement = document.getElementById('delete-user-modal');
+        const modal = new Modal($modalElement);
+        modal.show();
+    }
 </script>
 
 <?php

@@ -247,6 +247,7 @@ include 'includes/header.php';
         try {
             const formData = new URLSearchParams();
             formData.append('id', id);
+            formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout

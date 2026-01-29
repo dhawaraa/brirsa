@@ -2,9 +2,9 @@
 /**
  * Admin Header & Sidebar - ระบบจัดการหลังบ้าน (Flowbite)
  */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once '../includes/security.php';
+secure_session_start();
+verify_csrf();
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: index.php');

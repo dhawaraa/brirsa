@@ -135,10 +135,25 @@ function formatThaiDate($date)
     return "$day $month $year";
 }
 
-// Sanitize input
+// Include security utilities
+require_once __DIR__ . '/security.php';
+
+// Configure Error Reporting
+if (getenv('APP_ENV') === 'production') {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    ini_set('error_log', __DIR__ . '/../logs/php_error.log');
+} else {
+    // For development, we keep it visible but we should ideally log it too
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+}
+
+// Sanitize input (Enhanced with secure_session_start call elsewhere)
 function sanitize($input)
 {
-    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    return e(trim($input));
 }
 
 /**

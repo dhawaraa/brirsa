@@ -10,6 +10,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception('Method not allowed');
     }
+    verify_csrf();
 
     $id = intval($_POST['id'] ?? 0);
     $request_id = sanitize($_POST['request_id'] ?? '');

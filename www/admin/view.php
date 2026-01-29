@@ -389,6 +389,7 @@ include 'includes/header.php';
         <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">ดำเนินการอัปเดตสถานะ</h3>
             <form method="POST" enctype="multipart/form-data">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="update_status">
                 <div class="mb-4">
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">เปลี่ยนสถานะเป็น</label>
@@ -480,6 +481,7 @@ include 'includes/header.php';
                     </div>
                 <?php endif; ?>
                 <form method="POST" enctype="multipart/form-data">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="upload_cert">
                     <input type="file" name="file" accept=".pdf"
                         class="block w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 mb-2"
@@ -495,6 +497,7 @@ include 'includes/header.php';
             <h3 class="text-sm font-bold text-red-800 dark:text-red-400 mb-2">Danger Zone</h3>
             <p class="text-xs text-red-600 dark:text-red-300 mb-4">การลบข้อมูลนี้จะไม่สามารถย้อนกลับได้</p>
             <form method="POST" onsubmit="return confirm('ยืนยันการลบคำขอนี้?');">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="delete">
                 <button type="submit"
                     class="w-full text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">

@@ -293,6 +293,7 @@ if ($step === 'preview' && isset($_SESSION['csv_preview'])) {
         </div>
 
         <form method="POST" action="?step=preview" enctype="multipart/form-data" class="space-y-4">
+            <?php csrf_field(); ?>
             <div>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="csv_file">
                     เลือกไฟล์ CSV
@@ -409,6 +410,7 @@ if ($step === 'preview' && isset($_SESSION['csv_preview'])) {
 
     <div class="flex gap-2">
         <form method="POST" action="?step=import">
+            <?php csrf_field(); ?>
             <button type="submit"
                 class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700">
                 ยืนยันการ Import (

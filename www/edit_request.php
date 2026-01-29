@@ -105,6 +105,7 @@ include 'includes/navbar.php';
 
             <form id="editForm" action="api/update.php" method="POST" enctype="multipart/form-data"
                 class="p-8 space-y-6">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $request['id']; ?>">
                 <input type="hidden" name="request_id" value="<?php echo $requestId; ?>">
 
