@@ -9,8 +9,17 @@
  */
 function secure_session_start()
 {
-    // RBAC_SECURITY_V6
     if (session_status() === PHP_SESSION_NONE) {
+        // Set secure session cookie parameters
+        $secure = isset($_SERVER['HTTPS']) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
         session_start();
     }
 
@@ -25,6 +34,7 @@ function secure_session_start()
  */
 function get_csrf_token()
 {
+    secure_session_start();
     return $_SESSION['csrf_token'] ?? '';
 }
 
@@ -33,6 +43,7 @@ function get_csrf_token()
  */
 function validate_csrf_token($token)
 {
+    secure_session_start();
     if (!$token || !isset($_SESSION['csrf_token'])) {
         return false;
     }
@@ -45,10 +56,31 @@ function validate_csrf_token($token)
 function verify_csrf()
 {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        secure_session_start();
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
         if (!validate_csrf_token($token)) {
-            header('HTTP/1.1 403 Forbidden');
-            die('ความปลอดภัยล้มเหลว: CSRF Token ไม่ถูกต้อง (Security Error: Invalid CSRF Token)');
+            // Log for debugging on live host
+            $debug_info = [
+                'received_token' => $token ? 'present' : 'missing',
+                'session_token' => isset($_SESSION['csrf_token']) ? 'present' : 'missing',
+                'session_id' => session_id(),
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown'
+            ];
+            error_log("CSRF Validation Failed: " . json_encode($debug_info));
+
+            if (
+                strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false ||
+                strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false ||
+                strpos($_SERVER['REQUEST_URI'], '/api/') !== false
+            ) {
+
+                throw new Exception('ความปลอดภัยล้มเหลว: CSRF Token ไม่ถูกต้อง กรุณารีเฟรชหน้าเว็บและลองใหม่อีกครั้ง');
+            } else {
+                header('HTTP/1.1 403 Forbidden');
+                die('ความปลอดภัยล้มเหลว: CSRF Token ไม่ถูกต้อง กรุณารีเฟรชหน้าเว็บและลองใหม่อีกครั้ง');
+            }
         }
     }
 }

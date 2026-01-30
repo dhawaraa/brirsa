@@ -3,6 +3,7 @@
  * API: Submit Registration Form
  */
 header('Content-Type: application/json; charset=utf-8');
+ob_start(); // Start output buffering to catch any accidental output
 
 require_once '../includes/config.php';
 
@@ -262,6 +263,8 @@ try {
     ";
     sendMail($email, $subject, $body);
 
+    // Clear output buffer to discard any accidental output/warnings
+    ob_end_clean();
     echo json_encode([
         'success' => true,
         'request_id' => $request_id,
@@ -269,6 +272,9 @@ try {
     ]);
 
 } catch (Exception $e) {
+    // Clear output buffer on error as well
+    if (ob_get_length())
+        ob_end_clean();
     http_response_code(400);
     echo json_encode([
         'success' => false,

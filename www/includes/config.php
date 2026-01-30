@@ -112,7 +112,8 @@ function getDB()
                 ]
             );
         } catch (PDOException $e) {
-            die("Database Connection Error: " . $e->getMessage());
+            // Throw exception instead of die() so API can catch it and return JSON
+            throw new PDOException("Database Connection Error: " . $e->getMessage());
         }
     }
     return $pdo;
@@ -139,13 +140,17 @@ function formatThaiDate($date)
 require_once __DIR__ . '/security.php';
 
 // Configure Error Reporting
-if (getenv('APP_ENV') === 'production') {
+if (getenv('APP_ENV') === 'production' || $_SERVER['HTTP_HOST'] === 'newbri.mcu.ac.th') {
     error_reporting(0);
     ini_set('display_errors', 0);
     ini_set('log_errors', 1);
-    ini_set('error_log', __DIR__ . '/../logs/php_error.log');
+    // Ensure logs directory exists or use a default
+    $logDir = __DIR__ . '/../logs';
+    if (!file_exists($logDir)) {
+        @mkdir($logDir, 0755, true);
+    }
+    ini_set('error_log', $logDir . '/php_error.log');
 } else {
-    // For development, we keep it visible but we should ideally log it too
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 }

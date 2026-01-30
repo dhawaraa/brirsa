@@ -22,3 +22,6 @@ logs/
 # IDE files
 .vscode/
 .idea/
+
+# Custom Excludes
+*สำเนา*
