@@ -76,8 +76,19 @@ try {
 
                 // Send Email Notification
                 require_once '../includes/mail_config.php';
-                $statusLabel = $STATUS_OPTIONS[$newStatus]['label'] ?? $newStatus;
-                $subject = "อัปเดตสถานะคำขอรับรองงานวิจัย - รหัส {$request['request_id']} ($statusLabel)";
+                require_once '../includes/mail_helper.php';
+
+                // Detect language from applicant name
+                $lang = detectLanguageFromName($request['name']);
+
+                // Get status label based on language
+                $statusLabel = ($lang === 'en' && isset($STATUS_OPTIONS[$newStatus]['label_en']))
+                    ? $STATUS_OPTIONS[$newStatus]['label_en']
+                    : ($STATUS_OPTIONS[$newStatus]['label'] ?? $newStatus);
+
+                // Get bilingual subject
+                $subject = getEmailSubject('status_update', $lang, ['request_id' => $request['request_id']]);
+                $subject .= " ($statusLabel)";
 
                 $statusColor = $STATUS_OPTIONS[$newStatus]['color'] === 'blue' ? '#003366' :
                     ($STATUS_OPTIONS[$newStatus]['color'] === 'green' ? '#28a745' :
@@ -85,49 +96,13 @@ try {
                             ($STATUS_OPTIONS[$newStatus]['color'] === 'purple' ? '#6f42c1' :
                                 ($STATUS_OPTIONS[$newStatus]['color'] === 'red' ? '#dc3545' : '#6c757d'))));
 
-                $body = "
-                    <div style='font-family: sans-serif; line-height: 1.6; color: #333;'>
-                        <div style='background: #f8f9fa; padding: 20px; border-bottom: 3px solid $statusColor;'>
-                            <h2 style='margin: 0; color: $statusColor;'>อัปเดตสถานะคำขอรับรอง</h2>
-                        </div>
-                        <div style='padding: 20px; border: 1px solid #dee2e6; border-top: none;'>
-                            <p>เรียน คุณ <strong>{$request['name']}</strong></p>
-                            <p>คำขอรหัส <strong>{$request['request_id']}</strong> ของคุณมีการอัปเดตสถานะเป็น:</p>
-                            <div style='background: $statusColor; color: white; padding: 10px 20px; display: inline-block; border-radius: 5px; font-weight: bold; margin: 10px 0;'>
-                                $statusLabel
-                            </div>";
+                // Get bilingual email body
+                $body = getStatusUpdateEmailBody($request, $statusLabel, $statusColor, $correctionNote, $newStatus, $lang);
 
-                if (in_array($newStatus, ['correction', 'ch_edit', 'rejected']) && !empty($correctionNote)) {
-                    $noteLabel = match ($newStatus) {
-                        'ch_edit' => 'บันทึกแจ้งแก้ไขข้อมูล:',
-                        'correction' => 'บันทึกแจ้งแก้ไขรายงานวิจัย:',
-                        'rejected' => 'เหตุผลการไม่รับรอง:',
-                        default => 'บันทึกเพิ่มเติมจากเจ้าหน้าที่:'
-                    };
-                    $body .= "
-                            <div style='margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;'>
-                                <strong style='color: #856404; display: block; margin-bottom: 5px;'>$noteLabel</strong>
-                                <div style='color: #666; font-size: 14px; white-space: pre-wrap;'>" . nl2br($correctionNote) . "</div>
-                            </div>";
-                }
+                // Set sender name based on language
+                $fromName = ($lang === 'en') ? 'Buddhist Research Institute, MCU' : 'สถาบันวิจัยพุทธศาสตร์ มจร';
 
-                $body .= "
-                            <p style='margin-top: 30px; text-align: left;'>
-                                <a href='https://newbri.mcu.ac.th/app/rsa/status.php?id={$request['request_id']}' 
-                                   style='display: inline-block; padding: 12px 30px; background-color: #1a237e; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 16px; min-width: 200px; text-align: center;'>
-                                   หน้าตรวจสอบสถานะคลิกที่นี่
-                                </a>
-                            </p>
-                            <p style='margin-top: 20px; color: #666; font-size: 13px;'>
-                                หากปุ่มด้านบนไม่ทำงาน ท่านสามารถคัดลอกลิงก์ด้านล่างไปวางในบราวเซอร์ได้:<br>
-                                <span style='color: #1a237e; word-break: break-all;'>https://newbri.mcu.ac.th/app/rsa/status.php?id={$request['request_id']}</span>
-                            </p>
-                            <hr style='border: none; border-top: 1px solid #eee; margin: 25px 0;'>
-                            <p style='font-size: 12px; color: #999; text-align: center;'>นี่คือการแจ้งเตือนอัตโนมัติจากระบบขอรับรองงานวิจัย สถาบันวิจัยพุทธศาสตร์ มจร</p>
-                        </div>
-                    </div>";
-
-                sendMail($request['email'], $subject, $body);
+                sendMail($request['email'], $subject, $body, $fromName);
 
                 header("Location: view.php?id=$id&updated=1");
                 exit;

@@ -26,9 +26,10 @@ define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'สถาบันวิ�
  * @param string $to Recipient email
  * @param string $subject Email subject
  * @param string $body Email content (HTML supported)
+ * @param string|null $fromName Optional sender name (defaults to Thai name)
  * @return bool True on success, false on failure
  */
-function sendMail($to, $subject, $body)
+function sendMail($to, $subject, $body, $fromName = null)
 {
     if (empty(SMTP_PASS) || SMTP_PASS === 'YOUR_GMAIL_APP_PASSWORD') {
         error_log("Email sending failed: SMTP password not configured.");
@@ -49,8 +50,9 @@ function sendMail($to, $subject, $body)
         $mail->Port = SMTP_PORT;
         $mail->Timeout = 10; // Set timeout for mail server connection
 
-        // Recipients
-        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+        // Recipients - use custom name if provided, otherwise use default
+        $senderName = $fromName ?? SMTP_FROM_NAME;
+        $mail->setFrom(SMTP_FROM, $senderName);
         $mail->addAddress($to);
 
         // Content

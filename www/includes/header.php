@@ -131,7 +131,92 @@ if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'L
         .btn-pink:hover {
             background-color: #ad1457;
         }
+
+        /* Language Toggle Styles */
+        .lang-btn {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background-color: #1a237e;
+            color: white;
+        }
+
+        .lang-btn:not(.active) {
+            color: #6b7280;
+        }
+
+        .lang-btn:not(.active):hover {
+            background-color: #f3f4f6;
+        }
     </style>
+
+    <script>
+        // Language Core - Optimized
+        const LanguageCore = {
+            currentLang: localStorage.getItem('site_lang') || 'th',
+
+            init() {
+                // Check if language is specified in URL parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlLang = urlParams.get('lang');
+
+                // If URL has lang parameter, use it and save to localStorage
+                if (urlLang && (urlLang === 'th' || urlLang === 'en')) {
+                    this.currentLang = urlLang;
+                    localStorage.setItem('site_lang', urlLang);
+                }
+
+                this.apply(this.currentLang);
+                this.updateButtons();
+            },
+
+            switch(lang) {
+                this.currentLang = lang;
+                localStorage.setItem('site_lang', lang);
+                this.apply(lang);
+                this.updateButtons();
+                document.documentElement.lang = lang;
+            },
+
+            updateButtons() {
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === this.currentLang);
+                });
+            },
+
+            apply(lang) {
+                // Translate Text Content
+                const textElements = document.querySelectorAll(`[data-${lang}]`);
+                textElements.forEach(el => {
+                    const text = el.dataset[lang];
+                    if (text && el.textContent !== text) {
+                        el.textContent = text;
+                    }
+                });
+
+                // Translate Placeholders
+                // IMPORTANT: Browsers normalize attribute names to lowercase
+                // data-placeholderTh becomes data-placeholderth in the DOM
+                const placeholderKey = lang === 'th' ? 'placeholderth' : 'placeholderen';
+                const allInputs = document.querySelectorAll('input[placeholder], textarea[placeholder]');
+                allInputs.forEach(el => {
+                    const placeholder = el.dataset[placeholderKey];
+                    if (placeholder) {
+                        el.placeholder = placeholder;
+                    }
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            LanguageCore.init();
+        });
+    </script>
 </head>
 
 <body class="min-h-screen flex flex-col">

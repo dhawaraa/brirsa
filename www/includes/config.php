@@ -86,13 +86,48 @@ $AFFILIATIONS = [
 
 // สถานะและสี
 $STATUS_OPTIONS = [
-    'resubmitted' => ['label' => '0. นักวิจัยส่งข้อมูลแก้ไขแล้ว', 'color' => 'blue', 'icon' => 'refresh-cw'],
-    'checking' => ['label' => '1. เจ้าหน้าที่ตรวจสอบเอกสาร', 'color' => 'blue', 'icon' => 'file-text'],
-    'ch_edit' => ['label' => '1.5 นักวิจัยแก้ไขข้อมูลเอกสาร', 'color' => 'orange', 'icon' => 'edit-3'],
-    'committee' => ['label' => '2. เสนอกรรมการพิจารณา', 'color' => 'purple', 'icon' => 'users'],
-    'correction' => ['label' => '3. นักวิจัยแก้ไขรายงานวิจัย', 'color' => 'orange', 'icon' => 'file-text'],
-    'rejected' => ['label' => '4. ไม่รับรอง', 'color' => 'red', 'icon' => 'x'],
-    'approved' => ['label' => '5. อนุมัติรับรอง', 'color' => 'green', 'icon' => 'check-circle']
+    'resubmitted' => [
+        'label' => '0. นักวิจัยส่งข้อมูลแก้ไขแล้ว',
+        'label_en' => '0. Researcher Resubmitted',
+        'color' => 'blue',
+        'icon' => 'refresh-cw'
+    ],
+    'checking' => [
+        'label' => '1. เจ้าหน้าที่ตรวจสอบเอกสาร',
+        'label_en' => '1. Document Review',
+        'color' => 'blue',
+        'icon' => 'file-text'
+    ],
+    'ch_edit' => [
+        'label' => '1.5 นักวิจัยแก้ไขข้อมูลเอกสาร',
+        'label_en' => '1.5 Data Correction Required',
+        'color' => 'orange',
+        'icon' => 'edit-3'
+    ],
+    'committee' => [
+        'label' => '2. เสนอกรรมการพิจารณา',
+        'label_en' => '2. Under Committee Review',
+        'color' => 'purple',
+        'icon' => 'users'
+    ],
+    'correction' => [
+        'label' => '3. นักวิจัยแก้ไขรายงานวิจัย',
+        'label_en' => '3. Report Correction Required',
+        'color' => 'orange',
+        'icon' => 'file-text'
+    ],
+    'rejected' => [
+        'label' => '4. ไม่รับรอง',
+        'label_en' => '4. Rejected',
+        'color' => 'red',
+        'icon' => 'x'
+    ],
+    'approved' => [
+        'label' => '5. อนุมัติรับรอง',
+        'label_en' => '5. Approved',
+        'color' => 'green',
+        'icon' => 'check-circle'
+    ]
 ];
 
 // Database connection
