@@ -30,7 +30,7 @@ if ($filterSearch) {
     $params[] = $searchTerm;
 }
 if ($filterYear) {
-    $whereSql .= " AND fiscal_year = ?";
+    $whereSql .= " AND (YEAR(created_at) + 543) = ?";
     $params[] = $filterYear;
 }
 
@@ -56,7 +56,7 @@ echo "\xEF\xBB\xBF"; // UTF-8 BOM for Thai support
             <th>ลำดับ</th>
             <th>รหัสคำขอ</th>
             <th>วันที่ยื่น</th>
-            <th>ปีงบประมาณ</th>
+            <th>ปีที่ส่งคำขอ (พ.ศ.)</th>
             <th>ชื่อผู้ขอ</th>
             <th>สังกัด</th>
             <th>ชื่อโครงการ</th>
@@ -78,7 +78,7 @@ echo "\xEF\xBB\xBF"; // UTF-8 BOM for Thai support
                     <?php echo formatThaiDate($r['created_at']); ?>
                 </td>
                 <td>
-                    <?php echo $r['fiscal_year']; ?>
+                    <?php echo date('Y', strtotime($r['created_at'])) + 543; ?>
                 </td>
                 <td>
                     <?php echo htmlspecialchars($r['name']); ?>

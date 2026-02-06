@@ -152,9 +152,8 @@ include 'includes/navbar.php';
 
                             <?php if ($result['correction_note']): ?>
                                 <div
-                                    class="text-sm text-gray-800 bg-white p-3 rounded border border-orange-100 mb-3 whitespace-pre-wrap">
-                                    <?php echo nl2br(htmlspecialchars($result['correction_note'])); ?>
-                                </div>
+                                    class="text-sm text-gray-800 bg-white p-3 rounded border border-orange-100 mb-3 whitespace-normal text-left">
+                                    <?php echo nl2br(htmlspecialchars(trim($result['correction_note']))); ?></div>
                             <?php endif; ?>
 
                             <?php if ($result['file_correction']): ?>

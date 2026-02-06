@@ -344,9 +344,12 @@ include 'includes/header.php';
                     'file_sp10_1' => '4. แบบฟอร์มตรวจ สวพ.10.1',
                     'file_cert' => '5. เอกสารรับรองการตีพิมพ์',
                     'file_plagiarism' => '6. หลักฐานตรวจอักขราวิสุทธิ์',
-                    'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย'
+                    'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย',
+                    'file_explanation' => '8. ไฟล์ชี้แจงการแก้ไข'
                 ];
                 foreach ($files as $field => $label):
+                    if ($field === 'file_explanation' && empty($request[$field]))
+                        continue;
                     ?>
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                         <div class="flex items-center space-x-3">

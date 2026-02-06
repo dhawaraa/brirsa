@@ -93,7 +93,7 @@ try {
         mkdir($uploadDir, 0755, true);
     }
 
-    $fileFields = $isReportOnly ? ['file_report'] : ['file_report', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation'];
+    $fileFields = $isReportOnly ? ['file_report', 'file_explanation'] : ['file_report', 'file_explanation', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation'];
     $uploadedFiles = [];
 
     foreach ($fileFields as $field) {

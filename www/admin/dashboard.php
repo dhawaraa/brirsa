@@ -7,23 +7,37 @@ include 'includes/header.php';
 
 $pdo = getDB();
 
+// Filters
+$filterYear = sanitize($_GET['year'] ?? (date('Y') + 543));
+$whereYear = " WHERE (YEAR(created_at) + 543) = ?";
+
 // 1. Basic statistics
 $stats = [
-    'total' => $pdo->query("SELECT COUNT(*) FROM requests")->fetchColumn(),
-    'checking' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='checking'")->fetchColumn(),
-    'ch_edit' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='ch_edit'")->fetchColumn(),
-    'committee' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='committee'")->fetchColumn(),
-    'correction' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='correction'")->fetchColumn(),
-    'resubmitted' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='resubmitted'")->fetchColumn(),
-    'rejected' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='rejected'")->fetchColumn(),
-    'approved' => $pdo->query("SELECT COUNT(*) FROM requests WHERE status='approved'")->fetchColumn(),
+    'total' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear),
+    'checking' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='checking'"),
+    'ch_edit' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='ch_edit'"),
+    'committee' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='committee'"),
+    'correction' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='correction'"),
+    'resubmitted' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='resubmitted'"),
+    'rejected' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='rejected'"),
+    'approved' => $pdo->prepare("SELECT COUNT(*) FROM requests" . $whereYear . " AND status='approved'"),
 ];
 
-// 2. Monthly Stats for the current year
-$currentYear = date('Y');
+foreach ($stats as $key => $stmt) {
+    $stmt->execute([$filterYear]);
+    $stats[$key] = $stmt->fetchColumn();
+}
+
+$years = $pdo->query("SELECT DISTINCT (YEAR(created_at) + 543) as year FROM requests ORDER BY year DESC")->fetchAll(PDO::FETCH_COLUMN);
+if (empty($years))
+    $years = [date('Y') + 543];
+
+
+// 2. Monthly Stats for the selected year
+$selectedYearCE = $filterYear - 543;
 $monthlyData = [];
 for ($m = 1; $m <= 12; $m++) {
-    $monthStr = sprintf("%04d-%02d", $currentYear, $m);
+    $monthStr = sprintf("%04d-%02d", $selectedYearCE, $m);
     $count = $pdo->prepare("SELECT COUNT(*) FROM requests WHERE DATE_FORMAT(created_at, '%Y-%m') = ?");
     $count->execute([$monthStr]);
     $monthlyData[$m] = $count->fetchColumn();
@@ -44,11 +58,22 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
             <?php echo formatThaiDate(date('Y-m-d H:i:s')); ?>
         </p>
     </div>
-    <?php if (is_role('super_admin') || is_role('data_admin')): ?>
-        <div class="flex space-x-3">
-            <a href="requests.php"
+    <?php if (is_role('super_admin') || is_role('data_admin') || is_role('executive')): ?>
+        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3 items-end">
+            <form id="yearFilterForm" method="GET" class="flex items-center space-x-2">
+                <label for="year" class="text-xs font-bold text-gray-500 uppercase">ปีที่ส่งคำขอ</label>
+                <select name="year" id="year" onchange="this.form.submit()"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <?php foreach ($years as $y): ?>
+                        <option value="<?php echo $y; ?>" <?php echo $filterYear == $y ? 'selected' : ''; ?>>
+                            <?php echo $y; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+            <a href="requests.php?year=<?php echo $filterYear; ?>"
                 class="px-5 py-2.5 text-sm font-medium text-white bg-mcu-blue rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none transition-all">
-                ดูรายการทั้งหมด
+                ดูรายการปี <?php echo $filterYear; ?>
             </a>
         </div>
     <?php endif; ?>
@@ -188,7 +213,7 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">สถิติการยื่นคำขอรายเดือน</h3>
-                    <p class="text-sm text-gray-500 mt-1">ประจำปีพุทธศักราช <?php echo $currentYear + 543; ?></p>
+                    <p class="text-sm text-gray-500 mt-1">ประจำปีพุทธศักราช <?php echo $filterYear; ?></p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <span class="flex items-center text-xs font-medium text-gray-500">
@@ -213,7 +238,15 @@ $monthNames = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.�
 
                             <!-- Bar -->
                             <div
-                                class="w-full max-w-[40px] bg-blue-50 dark:bg-blue-900/10 rounded-t-xl relative overflow-hidden h-64 flex flex-col justify-end">
+                                class="w-full max-w-[40px] bg-blue-50 dark:bg-blue-900/10 rounded-t-xl relative h-64 flex flex-col justify-end">
+                                <!-- Number Label -->
+                                <?php if ($monthlyData[$m] > 0): ?>
+                                    <div class="absolute w-full text-center font-bold text-[10px] text-blue-700 dark:text-blue-400 mb-1"
+                                        style="bottom: <?php echo max($height, 5); ?>%; transform: translateY(-4px);">
+                                        <?php echo $monthlyData[$m]; ?>
+                                    </div>
+                                <?php endif; ?>
+
                                 <div class="w-full bg-gradient-to-t from-blue-700 to-indigo-500 rounded-t-xl transition-all duration-700 ease-out group-hover:from-blue-600 group-hover:to-indigo-400"
                                     style="height: <?php echo max($height, $monthlyData[$m] > 0 ? 5 : 0); ?>%">
                                     <div

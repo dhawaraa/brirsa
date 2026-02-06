@@ -84,8 +84,8 @@ include 'includes/navbar.php';
                     <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
                     สิ่งที่ต้องแก้ไข (จากเจ้าหน้าที่)
                 </h3>
-                <div class="text-gray-700 bg-white p-4 rounded border border-orange-100 whitespace-pre-wrap">
-                    <?php echo nl2br(htmlspecialchars($request['correction_note'])); ?>
+                <div class="text-gray-700 bg-white p-4 rounded border border-orange-100 whitespace-normal text-left">
+                    <?php echo nl2br(htmlspecialchars(trim($request['correction_note']))); ?>
                 </div>
             </div>
         <?php endif; ?>
@@ -191,9 +191,10 @@ include 'includes/navbar.php';
                     <div class="grid md:grid-cols-2 gap-x-8 gap-y-4">
                         <?php
                         $fileFields = $isReportOnly ? [
-                            ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์']
+                            ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์ (PDF)'],
+                            ['name' => 'file_explanation', 'label' => '2. แนบไฟล์ชี้แจงการแก้ไข (PDF)']
                         ] : [
-                            ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์'],
+                            ['name' => 'file_report', 'label' => '1. รายงานวิจัยฉบับสมบูรณ์ (PDF)'],
                             ['name' => 'file_self_assess', 'label' => '2. แบบประเมินตนเอง'],
                             ['name' => 'file_sp10', 'label' => '3. บันทึกข้อความ สวพ.10'],
                             ['name' => 'file_sp10_1', 'label' => '4. แบบฟอร์มตรวจ สวพ.10.1'],
@@ -207,11 +208,7 @@ include 'includes/navbar.php';
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <?php echo $field['label']; ?>
-                                    <?php if ($exists): ?>
-                                        <span class="ml-2 text-xs text-blue-600 font-normal">
-                                            (มีไฟล์เดิมอยู่แล้ว)
-                                        </span>
-                                    <?php else: ?>
+                                    <?php if (!$exists): ?>
                                         <span class="text-red-500">*</span>
                                     <?php endif; ?>
                                 </label>

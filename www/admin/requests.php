@@ -52,7 +52,7 @@ if ($filterSearch) {
     $params[] = $searchTerm;
 }
 if ($filterYear) {
-    $whereSql .= " AND fiscal_year = ?";
+    $whereSql .= " AND (YEAR(created_at) + 543) = ?";
     $params[] = $filterYear;
 }
 
@@ -69,7 +69,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $requests = $stmt->fetchAll();
 
-$years = $pdo->query("SELECT DISTINCT fiscal_year FROM requests ORDER BY fiscal_year DESC")->fetchAll(PDO::FETCH_COLUMN);
+$years = $pdo->query("SELECT DISTINCT (YEAR(created_at) + 543) as year FROM requests ORDER BY year DESC")->fetchAll(PDO::FETCH_COLUMN);
 
 // Build query string for filters to use in pagination links
 $queryParams = $_GET;
@@ -136,7 +136,7 @@ $exportUrl = "export_requests.php?" . $queryString;
             </select>
         </div>
         <div>
-            <label for="year" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ปีงบประมาณ</label>
+            <label for="year" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ปีที่ส่งคำขอ</label>
             <select name="year" id="year"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                 <option value="">ทั้งหมด</option>
@@ -238,7 +238,9 @@ $exportUrl = "export_requests.php?" . $queryString;
                                     title="<?php echo htmlspecialchars($r['project_title']); ?>">
                                     <?php echo htmlspecialchars($r['project_title']); ?>
                                 </div>
-                                <div class="text-[10px] text-gray-400">ปีงบประมาณ <?php echo $r['fiscal_year']; ?></div>
+                                <div class="text-[10px] text-gray-400">ปีที่ส่งคำขอ (พ.ศ.)
+                                    <?php echo date('Y', strtotime($r['created_at'])) + 543; ?> | ปีงบประมาณ
+                                    <?php echo $r['fiscal_year']; ?></div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-full <?php echo $colorClass; ?>">
