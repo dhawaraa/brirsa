@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /register.php
+Disallow: /status.php
+Disallow: /edit_request.php
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/

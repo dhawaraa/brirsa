@@ -123,7 +123,7 @@ function getProjectInfoEmailBody($req, $lang = 'th')
         <div style='font-family: \"Sarabun\", sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
             <div style='background: linear-gradient(135deg, #003366 0%, #0052a3 100%); color: white; padding: 30px; text-align: center;'>
                 <h2 style='margin: 0; font-size: 24px; letter-spacing: 0.5px;'>สรุปข้อมูลโครงการวิจัย</h2>
-                <p style='margin: 8px 0 0; opacity: 0.9; font-size: 14px;'>สถาบันวิจัยพุทธศาสตร์ | ระบบขอรับรองงานวิจัย</p>
+                <p style='margin: 8px 0 0; opacity: 0.9; font-size: 14px;'>สถาบันวิจัยพุทธศาสตร์ | ระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ</p>
             </div>
             
             <div style='padding: 30px;'>
@@ -282,7 +282,7 @@ function getStatusUpdateEmailBody($request, $statusLabel, $statusColor, $correct
                     <span style='color: #1a237e; word-break: break-all;'>$baseUrl/status.php?id=$request_id</span>
                 </p>
                 <hr style='border: none; border-top: 1px solid #eee; margin: 25px 0;'>
-                <p style='font-size: 12px; color: #999; text-align: center;'>นี่คือการแจ้งเตือนอัตโนมัติจากระบบขอรับรองงานวิจัย สถาบันวิจัยพุทธศาสตร์ มจร</p>
+                <p style='font-size: 12px; color: #999; text-align: center;'>นี่คือการแจ้งเตือนอัตโนมัติจากระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ สถาบันวิจัยพุทธศาสตร์ มจร</p>
             </div>
         </div>";
 }

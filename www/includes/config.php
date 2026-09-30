@@ -1,23 +1,22 @@
 <?php
 /**
  * Database Configuration
- * ระบบขอรับรองงานวิจัย - สถาบันวิจัยพุทธศาสตร์ มจร
+ * ระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ - สถาบันวิจัยพุทธศาสตร์ มจร
  */
-
-// Database settings
-// Database settings
-define('DB_HOST', getenv('DB_HOST') ?: 'brirscer-db');
-define('DB_NAME', getenv('DB_NAME') ?: 'brirscer_db');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: 'rootpassword');
 
 // Allow local override for simple hosting environments
 if (file_exists(__DIR__ . '/local.php')) {
     include __DIR__ . '/local.php';
 }
 
+// Database settings
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'newbri_rsa');
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'newbri');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: 'y8phtxMgEe3szHDj');
+
 // Site settings
-define('SITE_NAME', 'ระบบขอรับรองงานวิจัย');
+define('SITE_NAME', 'ระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ');
 define('GOOGLE_CHAT_WEBHOOK', 'https://chat.googleapis.com/v1/spaces/AAQABviegDk/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=yFxZtT0UlHi1iR8UGjEBjq50_AKl9ITt_d5g-Qsr5Vg');
 define('SITE_SUBTITLE', 'สถาบันวิจัยพุทธศาสตร์ | มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย');
 define('LOGO_URL', 'https://newbri.mcu.ac.th/wp-content/uploads/2025/10/mcu-logo-Large-Phone.png');

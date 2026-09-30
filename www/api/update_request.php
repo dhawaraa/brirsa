@@ -58,7 +58,8 @@ try {
         $tel = $current['tel'];
         $journal_name = $current['journal_name'];
         $plagiarism_percent = $current['plagiarism_percent'];
-
+        $contributorsJson = $current['contributors'] ?? '[]';
+ 
         if (!isset($_FILES['file_report']) || $_FILES['file_report']['error'] !== UPLOAD_ERR_OK) {
             // If they already have a report, maybe they are just updating other minor files (if we allowed it)
             // But usually for status 3 they MUST upload a new report.
@@ -77,7 +78,7 @@ try {
         $tel = sanitize($_POST['tel'] ?? '');
         $journal_name = sanitize($_POST['journal_name'] ?? '');
         $plagiarism_percent = floatval($_POST['plagiarism_percent'] ?? 0);
-
+ 
         // Validate required fields for full edit
         if (empty($name) || empty($project_title) || empty($fiscal_year) || empty($affiliation) || empty($tel)) {
             throw new Exception('กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -85,6 +86,33 @@ try {
         if ($plagiarism_percent > 15) {
             throw new Exception('เปอร์เซ็นต์การคัดลอกต้องไม่เกิน 15%');
         }
+
+        // Get and validate contributors
+        $contributorsRaw = $_POST['contributors'] ?? '[]';
+        $contributorsArr = json_decode($contributorsRaw, true);
+        if (!is_array($contributorsArr)) {
+            $contributorsArr = [];
+        }
+        
+        $sanitizedContributors = [];
+        foreach ($contributorsArr as $c) {
+            $cName = sanitize($c['name'] ?? '');
+            $cPercent = floatval($c['percent'] ?? 0);
+            $cRole = sanitize($c['role'] ?? '');
+            $cDesc = sanitize($c['description'] ?? '');
+            if (!empty($cName)) {
+                $sanitizedContributors[] = [
+                    'name' => $cName,
+                    'percent' => $cPercent,
+                    'role' => $cRole,
+                    'description' => $cDesc
+                ];
+            }
+        }
+        if (empty($sanitizedContributors)) {
+            throw new Exception('กรุณากรอกข้อมูลสัดส่วนการมีส่วนร่วมในงานวิจัยอย่างน้อย 1 รายการ');
+        }
+        $contributorsJson = json_encode($sanitizedContributors, JSON_UNESCAPED_UNICODE);
     }
 
     // Handle file uploads (optional replacement)
@@ -93,7 +121,7 @@ try {
         mkdir($uploadDir, 0755, true);
     }
 
-    $fileFields = $isReportOnly ? ['file_report', 'file_explanation'] : ['file_report', 'file_explanation', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation'];
+    $fileFields = $isReportOnly ? ['file_report', 'file_explanation'] : ['file_report', 'file_explanation', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation', 'file_ethics'];
     $uploadedFiles = [];
 
     foreach ($fileFields as $field) {
@@ -122,7 +150,7 @@ try {
     $sql = "UPDATE requests SET 
             name = ?, project_title = ?, fiscal_year = ?, affiliation = ?, 
             academic_position = ?, branch = ?, tel = ?, journal_name = ?, 
-            plagiarism_percent = ?, status = 'resubmitted'";
+            plagiarism_percent = ?, contributors = ?, status = 'resubmitted'";
     $params = [
         $name,
         $project_title,
@@ -132,7 +160,8 @@ try {
         $branch,
         $tel,
         $journal_name,
-        $plagiarism_percent
+        $plagiarism_percent,
+        $contributorsJson
     ];
 
     foreach ($uploadedFiles as $field => $path) {

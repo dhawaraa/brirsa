@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Edit Request - ระบบขอรับรองงานวิจัย
+ * Admin Edit Request - ระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ
  */
 $pageTitle = "แก้ไขข้อมูลคำขอ";
 
@@ -39,11 +39,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $journal_name = sanitize($_POST['journal_name'] ?? '');
         $plagiarism_percent = floatval($_POST['plagiarism_percent'] ?? 0);
 
+        // Get and validate contributors
+        $contributorsRaw = $_POST['contributors'] ?? '[]';
+        $contributorsArr = json_decode($contributorsRaw, true);
+        if (!is_array($contributorsArr)) {
+            $contributorsArr = [];
+        }
+        
+        $sanitizedContributors = [];
+        foreach ($contributorsArr as $c) {
+            $cName = sanitize($c['name'] ?? '');
+            $cPercent = floatval($c['percent'] ?? 0);
+            $cRole = sanitize($c['role'] ?? '');
+            $cDesc = sanitize($c['description'] ?? '');
+            if (!empty($cName)) {
+                $sanitizedContributors[] = [
+                    'name' => $cName,
+                    'percent' => $cPercent,
+                    'role' => $cRole,
+                    'description' => $cDesc
+                ];
+            }
+        }
+        if (empty($sanitizedContributors)) {
+            throw new Exception('กรุณากรอกข้อมูลสัดส่วนการมีส่วนร่วมในงานวิจัยอย่างน้อย 1 รายการ');
+        }
+        $contributorsJson = json_encode($sanitizedContributors, JSON_UNESCAPED_UNICODE);
+
         // Update basic info
         $sql = "UPDATE requests SET 
                 name = ?, project_title = ?, fiscal_year = ?, affiliation = ?, 
                 academic_position = ?, branch = ?, tel = ?, email = ?, 
-                journal_name = ?, plagiarism_percent = ? 
+                journal_name = ?, plagiarism_percent = ?, contributors = ? 
                 WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
@@ -57,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $email,
             $journal_name,
             $plagiarism_percent,
+            $contributorsJson,
             $id
         ]);
 
@@ -73,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'file_cert',
             'file_plagiarism',
             'file_participation',
+            'file_ethics',
             'file_rs_cert',
             'file_correction'
         ];
@@ -248,6 +277,72 @@ include 'includes/header.php';
                 </div>
             </div>
 
+            <!-- สัดส่วนการมีส่วนร่วมในงานวิจัย (Repeater Field) -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-4 border-b pb-4 dark:border-gray-700">
+                    <h4 class="font-bold text-gray-800 dark:text-white flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        สัดส่วนการมีส่วนร่วมในงานวิจัย <span class="text-red-500">*</span>
+                    </h4>
+                    <button type="button" id="addContributorBtn"
+                        class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        เพิ่มผู้ร่วมงาน
+                    </button>
+                </div>
+
+                <div id="contributorsContainer" class="space-y-4">
+                    <?php
+                    $contributors = json_decode($request['contributors'] ?? '[]', true);
+                    foreach ($contributors as $index => $c):
+                    ?>
+                        <div class="contributor-row grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 relative group">
+                            <!-- ชื่อผู้ร่วมงาน -->
+                            <div class="md:col-span-4">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">ชื่อผู้ร่วมงาน</label>
+                                <input type="text" class="contrib-name bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="ระบุชื่อ-นามสกุล" value="<?php echo htmlspecialchars($c['name']); ?>">
+                            </div>
+                            
+                            <!-- ปริมาณงานร้อยละ -->
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">ปริมาณงานร้อยละ</label>
+                                <input type="number" class="contrib-percent bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required min="0" max="100" placeholder="เช่น 50" value="<?php echo $c['percent']; ?>">
+                            </div>
+
+                            <!-- บทบาท -->
+                            <div class="md:col-span-3">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">บทบาท</label>
+                                <select class="contrib-role bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="หัวหน้าโครงการวิจัย" <?php echo ($c['role'] ?? '') === 'หัวหน้าโครงการวิจัย' ? 'selected' : ''; ?>>หัวหน้าโครงการวิจัย</option>
+                                    <option value="ผู้ร่วมโครงการวิจัย" <?php echo ($c['role'] ?? '') === 'ผู้ร่วมโครงการวิจัย' ? 'selected' : ''; ?>>ผู้ร่วมโครงการวิจัย</option>
+                                </select>
+                            </div>
+
+                            <!-- รายละเอียดบทบาท/หน้าที่ -->
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">รายละเอียดบทบาท/หน้าที่</label>
+                                <input type="text" class="contrib-desc bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="เช่น ออกแบบการทดลอง" value="<?php echo htmlspecialchars($c['description'] ?? ''); ?>">
+                            </div>
+
+                            <!-- ลบ -->
+                            <div class="md:col-span-1 flex items-end justify-center pb-1">
+                                <button type="button" class="remove-contrib-btn text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors" title="ลบผู้ร่วมงาน">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <input type="hidden" name="contributors" id="contributors_hidden" value="[]">
+            </div>
+
             <!-- Save Action Block -->
             <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
                 <div class="flex flex-col md:flex-row items-center gap-4">
@@ -284,9 +379,10 @@ include 'includes/header.php';
                         'file_self_assess' => '2. แบบประเมินตนเอง',
                         'file_sp10' => '3. บันทึกข้อความ สวพ.10',
                         'file_sp10_1' => '4. แบบฟอร์มตรวจ สวพ.10.1',
-                        'file_cert' => '5. เอกสารรับรองการตีพิมพ์',
+                        'file_cert' => '5. บทความวิจัยที่ได้รับการตีพิมพ์',
                         'file_plagiarism' => '6. หลักฐานตรวจอักขราวิสุทธิ์',
-                        'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย'
+                        'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย',
+                        'file_ethics' => '8. เอกสารรับรองจริยธรรมการวิจัย'
                     ];
                     foreach ($files as $field => $label):
                         ?>
@@ -317,5 +413,92 @@ include 'includes/header.php';
         </div>
     </div>
 </form>
+
+<script>
+    // Bind remove button for existing rows
+    document.querySelectorAll('.remove-contrib-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            btn.closest('.contributor-row').remove();
+        });
+    });
+
+    const contributorsContainer = document.getElementById('contributorsContainer');
+    const addContributorBtn = document.getElementById('addContributorBtn');
+
+    addContributorBtn.addEventListener('click', function() {
+        const row = document.createElement('div');
+        row.className = 'contributor-row grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 relative group';
+        row.innerHTML = `
+            <!-- ชื่อผู้ร่วมงาน -->
+            <div class="md:col-span-4">
+                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">ชื่อผู้ร่วมงาน</label>
+                <input type="text" class="contrib-name bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="ระบุชื่อ-นามสกุล">
+            </div>
+            
+            <!-- ปริมาณงานร้อยละ -->
+            <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">ปริมาณงานร้อยละ</label>
+                <input type="number" class="contrib-percent bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required min="0" max="100" placeholder="เช่น 50">
+            </div>
+
+            <!-- บทบาท -->
+            <div class="md:col-span-3">
+                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">บทบาท</label>
+                <select class="contrib-role bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="หัวหน้าโครงการวิจัย">หัวหน้าโครงการวิจัย</option>
+                    <option value="ผู้ร่วมโครงการวิจัย">ผู้ร่วมโครงการวิจัย</option>
+                </select>
+            </div>
+
+            <!-- รายละเอียดบทบาท/หน้าที่ -->
+            <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">รายละเอียดบทบาท/หน้าที่</label>
+                <input type="text" class="contrib-desc bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="เช่น ออกแบบการทดลอง">
+            </div>
+
+            <!-- ลบ -->
+            <div class="md:col-span-1 flex items-end justify-center pb-1">
+                <button type="button" class="remove-contrib-btn text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors" title="ลบผู้ร่วมงาน">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        `;
+        contributorsContainer.appendChild(row);
+        
+        // Bind remove button
+        row.querySelector('.remove-contrib-btn').addEventListener('click', function() {
+            row.remove();
+        });
+    });
+
+    // Before form submits, compile contributors to JSON hidden input
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const contributorRows = document.querySelectorAll('.contributor-row');
+        if (contributorRows.length === 0) {
+            e.preventDefault();
+            alert('กรุณากรอกข้อมูลสัดส่วนการมีส่วนร่วมในงานวิจัยอย่างน้อย 1 รายการ');
+            return;
+        }
+
+        const contributors = [];
+        contributorRows.forEach(row => {
+            const name = row.querySelector('.contrib-name').value.trim();
+            const percent = row.querySelector('.contrib-percent').value.trim();
+            const role = row.querySelector('.contrib-role').value;
+            const desc = row.querySelector('.contrib-desc').value.trim();
+            if (name || percent || desc) {
+                contributors.push({
+                    name: name,
+                    percent: percent ? parseFloat(percent) : 0,
+                    role: role,
+                    description: desc
+                });
+            }
+        });
+        document.getElementById('contributors_hidden').value = JSON.stringify(contributors);
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>

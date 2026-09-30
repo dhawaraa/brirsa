@@ -61,7 +61,7 @@ try {
     }
 
     // Handle file uploads
-    $fileFields = ['file_report', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation'];
+    $fileFields = ['file_report', 'file_self_assess', 'file_sp10', 'file_sp10_1', 'file_cert', 'file_plagiarism', 'file_participation', 'file_ethics'];
     $uploadedFiles = [];
 
     foreach ($fileFields as $field) {
@@ -95,20 +95,48 @@ try {
         }
     }
 
+    // Get and validate contributors
+    $contributorsRaw = $_POST['contributors'] ?? '[]';
+    $contributorsArr = json_decode($contributorsRaw, true);
+    if (!is_array($contributorsArr)) {
+        $contributorsArr = [];
+    }
+    
+    // Sanitize contributors fields
+    $sanitizedContributors = [];
+    foreach ($contributorsArr as $c) {
+        $cName = sanitize($c['name'] ?? '');
+        $cPercent = floatval($c['percent'] ?? 0);
+        $cRole = sanitize($c['role'] ?? '');
+        $cDesc = sanitize($c['description'] ?? '');
+        if (!empty($cName)) {
+            $sanitizedContributors[] = [
+                'name' => $cName,
+                'percent' => $cPercent,
+                'role' => $cRole,
+                'description' => $cDesc
+            ];
+        }
+    }
+    if (empty($sanitizedContributors)) {
+        throw new Exception('กรุณากรอกข้อมูลสัดส่วนการมีส่วนร่วมในงานวิจัยอย่างน้อย 1 รายการ');
+    }
+    $contributorsJson = json_encode($sanitizedContributors, JSON_UNESCAPED_UNICODE);
+
     // Insert into database
     $stmt = $pdo->prepare("
         INSERT INTO requests (
             request_id, name, project_title, fiscal_year, affiliation, 
             academic_position, branch, tel, email, journal_name, 
-            plagiarism_percent, status,
+            plagiarism_percent, contributors, status,
             file_report, file_self_assess, file_sp10, file_sp10_1, file_cert, file_plagiarism,
-            file_participation
+            file_participation, file_ethics
         ) VALUES (
             ?, ?, ?, ?, ?, 
             ?, ?, ?, ?, ?, 
-            ?, 'checking',
+            ?, ?, 'checking',
             ?, ?, ?, ?, ?, ?,
-            ?
+            ?, ?
         )
     ");
 
@@ -124,13 +152,15 @@ try {
         $email,
         $journal_name,
         $plagiarism_percent,
+        $contributorsJson,
         $uploadedFiles['file_report'] ?? null,
         $uploadedFiles['file_self_assess'] ?? null,
         $uploadedFiles['file_sp10'] ?? null,
         $uploadedFiles['file_sp10_1'] ?? null,
         $uploadedFiles['file_cert'] ?? null,
         $uploadedFiles['file_plagiarism'] ?? null,
-        $uploadedFiles['file_participation'] ?? null
+        $uploadedFiles['file_participation'] ?? null,
+        $uploadedFiles['file_ethics'] ?? null
     ]);
 
     $lastId = $pdo->lastInsertId();
@@ -161,9 +191,10 @@ try {
         'file_self_assess' => '2. แบบประเมินตนเอง',
         'file_sp10' => '3. บันทึกข้อความ สวพ.10',
         'file_sp10_1' => '4. แบบฟอร์มตรวจ สวพ.10.1',
-        'file_cert' => '5. เอกสารรับรองการตีพิมพ์',
+        'file_cert' => '5. บทความวิจัยที่ได้รับการตีพิมพ์',
         'file_plagiarism' => '6. หลักฐานตรวจอักขราวิสุทธิ์',
-        'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย'
+        'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย',
+        'file_ethics' => '8. เอกสารรับรองจริยธรรมการวิจัย'
     ];
 
     foreach ($fileLabels as $key => $label) {
@@ -180,7 +211,7 @@ try {
     $body = "
         <div style='font-family: \"Sarabun\", sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; overflow: hidden;'>
             <div style='background-color: #003366; color: white; padding: 20px; text-align: center;'>
-                <h2 style='margin: 0;'>ระบบขอรับรองงานวิจัย</h2>
+                <h2 style='margin: 0;'>ระบบรับรองงานวิจัยเพื่อขอตำแหน่งทางวิชาการ</h2>
                 <p style='margin: 5px 0 0; opacity: 0.8;'>สถาบันวิจัยพุทธศาสตร์ มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย</p>
             </div>
             

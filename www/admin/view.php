@@ -195,7 +195,14 @@ include 'includes/header.php';
             </li>
         </ol>
     </nav>
-    <div class="mt-4 flex justify-end">
+    <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <a href="checklist_view.php?id=<?php echo $id; ?>"
+            class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-colors">
+            <svg class="w-4 h-4 me-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            แบบตรวจรับรอง (Checklist V2)
+        </a>
         <a href="edit.php?id=<?php echo $id; ?>"
             class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
             <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,6 +311,57 @@ include 'includes/header.php';
                         <?php echo $request['plagiarism_percent']; ?> %
                     </dd>
                 </div>
+
+                <!-- Research Contributors Section -->
+                <div class="md:col-span-2 mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                    <dt class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        สัดส่วนการมีส่วนร่วมในงานวิจัย
+                    </dt>
+                    <dd class="text-gray-900 dark:text-white mt-1">
+                        <?php
+                        $contributors = json_decode($request['contributors'] ?? '[]', true);
+                        if (empty($contributors)):
+                        ?>
+                            <span class="text-sm text-gray-500 italic">ไม่มีข้อมูลผู้ร่วมวิจัย</span>
+                        <?php else: ?>
+                            <div class="relative overflow-x-auto border border-gray-100 dark:border-gray-700 rounded-lg">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-3 font-bold whitespace-nowrap">ชื่อผู้ร่วมงาน</th>
+                                            <th scope="col" class="px-4 py-3 font-bold text-center whitespace-nowrap">สัดส่วนร้อยละ</th>
+                                            <th scope="col" class="px-4 py-3 font-bold whitespace-nowrap">บทบาท</th>
+                                            <th scope="col" class="px-4 py-3 font-bold">รายละเอียดบทบาท/หน้าที่</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                        <?php foreach ($contributors as $c): ?>
+                                            <tr class="bg-white dark:bg-gray-800">
+                                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                                                    <?php echo htmlspecialchars($c['name']); ?>
+                                                </td>
+                                                <td class="px-4 py-3 text-center font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                                                    <?php echo $c['percent']; ?> %
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo ($c['role'] ?? '') === 'หัวหน้าโครงการวิจัย' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'; ?>">
+                                                        <?php echo htmlspecialchars($c['role'] ?? '-'); ?>
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-normal break-words">
+                                                    <?php echo htmlspecialchars($c['description'] ?? '-'); ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </dd>
+                </div>
             </dl>
         </div>
 
@@ -317,10 +375,11 @@ include 'includes/header.php';
                     'file_self_assess' => '2. แบบประเมินตนเอง',
                     'file_sp10' => '3. บันทึกข้อความ สวพ.10',
                     'file_sp10_1' => '4. แบบฟอร์มตรวจ สวพ.10.1',
-                    'file_cert' => '5. เอกสารรับรองการตีพิมพ์',
+                    'file_cert' => '5. บทความวิจัยที่ได้รับการตีพิมพ์',
                     'file_plagiarism' => '6. หลักฐานตรวจอักขราวิสุทธิ์',
                     'file_participation' => '7. หลักฐานการมีส่วนร่วมในงานวิจัย',
-                    'file_explanation' => '8. ไฟล์ชี้แจงการแก้ไข'
+                    'file_ethics' => '8. เอกสารรับรองจริยธรรมการวิจัย',
+                    'file_explanation' => '9. ไฟล์ชี้แจงการแก้ไข'
                 ];
                 foreach ($files as $field => $label):
                     if ($field === 'file_explanation' && empty($request[$field]))
@@ -413,8 +472,14 @@ include 'includes/header.php';
                                 <span class="text-[10px] text-orange-700 truncate max-w-[150px]">
                                     <?php echo basename($request['file_correction']); ?>
                                 </span>
-                                <a href="<?php echo htmlspecialchars(ensureSecureUrl($request['file_correction'])); ?>"
-                                    target="_blank" class="text-blue-600 text-[10px] font-bold">เปิดอ่าน</a>
+                                <?php
+                                $corrUrl = ensureSecureUrl($request['file_correction']);
+                                if (!preg_match('~^(?:f|ht)tps?://~i', $corrUrl)) {
+                                    $corrUrl = '../' . $corrUrl;
+                                }
+                                ?>
+                                <a href="<?php echo htmlspecialchars($corrUrl); ?>" target="_blank"
+                                    class="text-blue-600 text-[10px] font-bold">เปิดอ่าน</a>
                             </div>
                         <?php endif; ?>
                         <input type="file" name="correction_file" accept=".pdf"

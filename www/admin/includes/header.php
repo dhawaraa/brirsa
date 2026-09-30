@@ -187,6 +187,21 @@ require_once '../includes/config.php';
                                 </span>
                             <?php endif; ?>
                         </a>
+                    <li>
+                        <a href="checklists.php"
+                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo in_array(basename($_SERVER['PHP_SELF']), ['checklists.php', 'checklist_view.php']) ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm4.996 2a1 1 0 0 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm0 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm0 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm3-6a1 1 0 0 0 0 2h7.01a1 1 0 1 0 0-2H9.996Zm0 3a1 1 0 1 0 0 2h7.01a1 1 0 1 0 0-2H9.996Zm0 3a1 1 0 1 0 0 2h7.01a1 1 0 1 0 0-2H9.996Z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span class="flex-1 ms-3 whitespace-nowrap">แบบตรวจรับรอง (V2)</span>
+                            <span class="inline-flex items-center justify-center px-2 py-0.5 ms-2 text-[10px] font-bold text-amber-800 bg-amber-100 rounded-full dark:bg-amber-900 dark:text-amber-300">
+                                AI
+                            </span>
+                        </a>
                     </li>
                     <li>
                         <a href="send_info.php"
@@ -235,6 +250,19 @@ require_once '../includes/config.php';
                     </li>
                 <?php endif; ?>
                 <li class="pt-4 mt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                    <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+                        <a href="popups.php"
+                            class="flex items-center p-2 text-gray-700 rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'popups.php' ? 'bg-gray-100 dark:bg-gray-700 font-medium' : ''; ?>">
+                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h15a3 3 0 003-3v-9a3 3 0 00-3-3h-15zm10.75 4.75a.75.75 0 00-1.5 0v5.5a.75.75 0 001.5 0v-5.5zm-4 2a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zm-4 1.5a.75.75 0 00-1.5 0v2a.75.75 0 001.5 0v-2z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span class="ms-3">จัดการ Popup</span>
+                        </a>
+                    <?php endif; ?>
                     <a href="../" target="_blank"
                         class="flex items-center p-2 text-gray-700 rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group">
                         <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
