@@ -119,6 +119,7 @@ require_once '../includes/config.php';
                             $roleMap = [
                                 'super_admin' => ['label' => 'Super Admin', 'color' => 'blue'],
                                 'data_admin' => ['label' => 'Data Admin', 'color' => 'green'],
+                                'committee' => ['label' => 'กรรมการตรวจรับรอง', 'color' => 'amber'],
                                 'executive' => ['label' => 'Executive', 'color' => 'purple']
                             ];
                             $roleInfo = $roleMap[$_SESSION['admin_role'] ?? 'super_admin'] ?? ['label' => 'Admin', 'color' => 'gray'];
@@ -161,7 +162,7 @@ require_once '../includes/config.php';
                         <span class="ms-3">ภาพรวมระบบ</span>
                     </a>
                 </li>
-                <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+                <?php if (is_role('super_admin') || is_role('data_admin') || is_role('committee')): ?>
                     <li>
                         <a href="requests.php"
                             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'requests.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
@@ -197,26 +198,25 @@ require_once '../includes/config.php';
                                     d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm4.996 2a1 1 0 0 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm0 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm0 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01Zm3-6a1 1 0 0 0 0 2h7.01a1 1 0 1 0 0-2H9.996Zm0 3a1 1 0 1 0 0 2h7.01a1 1 0 1 0 0-2H9.996Zm0 3a1 1 0 1 0 0 2h7.01a1 1 0 1 0 0-2H9.996Z"
                                     clip-rule="evenodd" />
                             </svg>
-                            <span class="flex-1 ms-3 whitespace-nowrap">แบบตรวจรับรอง (V2)</span>
-                            <span class="inline-flex items-center justify-center px-2 py-0.5 ms-2 text-[10px] font-bold text-amber-800 bg-amber-100 rounded-full dark:bg-amber-900 dark:text-amber-300">
-                                AI
-                            </span>
+                            <span class="flex-1 ms-3 whitespace-nowrap">แบบตรวจรับรองงานวิจัย</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="send_info.php"
-                            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'send_info.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
-                            <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                viewBox="0 0 24 24">
-                                <path
-                                    d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                                <path
-                                    d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-                            </svg>
-                            <span class="ms-3">ส่งเมลแจ้งข้อมูล</span>
-                        </a>
-                    </li>
+                    <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+                        <li>
+                            <a href="send_info.php"
+                                class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group <?php echo basename($_SERVER['PHP_SELF']) == 'send_info.php' ? 'bg-gray-100 dark:bg-gray-700' : ''; ?>">
+                                <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                                    <path
+                                        d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                                </svg>
+                                <span class="ms-3">ส่งเมลแจ้งข้อมูล</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if (is_role('super_admin')): ?>

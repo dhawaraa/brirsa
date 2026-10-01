@@ -7,7 +7,7 @@ $pageTitle = "ตรวจสอบข้อมูลคำขอ";
 require_once '../includes/config.php';
 
 // Access Control
-check_role(['super_admin', 'data_admin']);
+check_role(['super_admin', 'data_admin', 'committee']);
 
 $id = intval($_GET['id'] ?? 0);
 $pdo = getDB();
@@ -135,6 +135,9 @@ try {
                 break;
 
             case 'delete':
+                if (!is_role('super_admin') && !is_role('data_admin')) {
+                    throw new Exception("ท่านไม่มีสิทธิ์ลบคำขอนี้");
+                }
                 $stmt = $pdo->prepare("DELETE FROM requests WHERE id = ?");
                 $stmt->execute([$id]);
                 header('Location: requests.php?deleted=1');
@@ -201,16 +204,18 @@ include 'includes/header.php';
             <svg class="w-4 h-4 me-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
-            แบบตรวจรับรอง (Checklist V2)
+            แบบตรวจรับรองงานวิจัย
         </a>
-        <a href="edit.php?id=<?php echo $id; ?>"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
-            <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="m14.3 4.8 2.9 2.9M7 7H4a1 1 0 0 0-1 1v10c0 .6.4 1 1 1h11c.6 0 1-.4 1-1v-4.5m2.4-10a2 2 0 0 1 0 3l-6.8 6.8L8 14l.7-3.6 6.9-6.8a2 2 0 0 1 2.8 0Z" />
-            </svg>
-            แก้ไขข้อมูล
-        </a>
+        <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+            <a href="edit.php?id=<?php echo $id; ?>"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
+                <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m14.3 4.8 2.9 2.9M7 7H4a1 1 0 0 0-1 1v10c0 .6.4 1 1 1h11c.6 0 1-.4 1-1v-4.5m2.4-10a2 2 0 0 1 0 3l-6.8 6.8L8 14l.7-3.6 6.9-6.8a2 2 0 0 1 2.8 0Z" />
+                </svg>
+                แก้ไขข้อมูล
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -539,18 +544,20 @@ include 'includes/header.php';
         </div>
 
         <!-- Delete Action -->
-        <div class="p-6 bg-red-50 border border-red-200 rounded-lg shadow-sm dark:bg-red-900/20 dark:border-red-800">
-            <h3 class="text-sm font-bold text-red-800 dark:text-red-400 mb-2">Danger Zone</h3>
-            <p class="text-xs text-red-600 dark:text-red-300 mb-4">การลบข้อมูลนี้จะไม่สามารถย้อนกลับได้</p>
-            <form method="POST" onsubmit="return confirm('ยืนยันการลบคำขอนี้?');">
-                <?php csrf_field(); ?>
-                <input type="hidden" name="action" value="delete">
-                <button type="submit"
-                    class="w-full text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                    ลบคำขอนี้
-                </button>
-            </form>
-        </div>
+        <?php if (is_role('super_admin') || is_role('data_admin')): ?>
+            <div class="p-6 bg-red-50 border border-red-200 rounded-lg shadow-sm dark:bg-red-900/20 dark:border-red-800">
+                <h3 class="text-sm font-bold text-red-800 dark:text-red-400 mb-2">Danger Zone</h3>
+                <p class="text-xs text-red-600 dark:text-red-300 mb-4">การลบข้อมูลนี้จะไม่สามารถย้อนกลับได้</p>
+                <form method="POST" onsubmit="return confirm('ยืนยันการลบคำขอนี้?');">
+                    <?php csrf_field(); ?>
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit"
+                        class="w-full text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                        ลบคำขอนี้
+                    </button>
+                </form>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 

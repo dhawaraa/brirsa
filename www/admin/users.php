@@ -102,6 +102,7 @@ $admins = $stmt->fetchAll();
 $ROLE_LABELS = [
     'super_admin' => ['label' => 'ผู้ดูแลระบบ', 'color' => 'blue'],
     'data_admin' => ['label' => 'ผู้ดูแลข้อมูล', 'color' => 'green'],
+    'committee' => ['label' => 'คณะกรรมการตรวจสอบรับรอง', 'color' => 'amber'],
     'executive' => ['label' => 'ผู้บริหาร', 'color' => 'purple']
 ];
 ?>
@@ -276,6 +277,7 @@ $ROLE_LABELS = [
                             required>
                             <option value="super_admin">ผู้ดูแลระบบ (จัดได้ทุกอย่าง)</option>
                             <option value="data_admin">ผู้ดูแลข้อมูล (ยกเว้น CSV)</option>
+                            <option value="committee">คณะกรรมการตรวจสอบรับรอง (ตรวจประเมินงานวิจัย)</option>
                             <option value="executive">ผู้บริหาร (ดูภาพรวมอย่างเดียว)</option>
                         </select>
                     </div>
@@ -342,6 +344,7 @@ $ROLE_LABELS = [
                             required>
                             <option value="super_admin">ผู้ดูแลระบบ</option>
                             <option value="data_admin">ผู้ดูแลข้อมูล</option>
+                            <option value="committee">คณะกรรมการตรวจสอบรับรอง</option>
                             <option value="executive">ผู้บริหาร</option>
                         </select>
                     </div>
